@@ -41,6 +41,12 @@ TEST_CASE("tagged_pointer - basic test") {
   REQUIRE(*tagptr.ptr() == i);
 }
 
+TEST_CASE("tagged_pointer - size test") {
+  int i = 42;
+  tagged_pointer<int> a(&i, 5);
+  REQUIRE(sizeof(a) == sizeof(&i));
+}
+
 TEST_CASE("tagged_pointer - operator==") {
   int i = 42;
   tagged_pointer<int> a(&i, 5);
