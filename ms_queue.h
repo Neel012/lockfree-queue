@@ -1,5 +1,8 @@
+#pragma once
+
 #include <atomic>
 #include "queue.h"
+#include "tagged_pointer.h"
 #include "tests/catch.hpp"
 
 namespace lockfree {
@@ -10,7 +13,7 @@ struct ms_queue : queue<T> {
   using optional = std::experimental::optional<value_type>;
 
   ms_queue() {
-    node* new_node = new node();
+    pointer_type new_node(new node());
     tail_ = new_node;
     head_ = new_node;
   }
@@ -25,31 +28,33 @@ struct ms_queue : queue<T> {
 
   optional dequeue() final {
     optional value;
-    node* head;
+    pointer_type head;
     while (true) {
       head = head_.load();
-      node* tail = tail_.load();
-      node* next = head->next.load();
+      pointer_type tail = tail_.load();
+      pointer_type next = head.ptr()->next.load();
       if (head == head_) {
-        if (head == tail) {
-          if (next == nullptr) {
+        if (head.ptr() == tail.ptr()) {
+          if (next.ptr() == nullptr) {
             return optional();
           }
-          tail_.compare_exchange_strong(tail, next);
+          tail_.compare_exchange_strong(tail, pointer_type(next.ptr(), tail.count() + 1));
         } else {
-          value = next->data;
-          if (head_.compare_exchange_weak(head, next)) {
+          value = next.ptr()->data;
+          if (head_.compare_exchange_weak(head, pointer_type(next.ptr(), head.count() + 1))) {
             break;
           }
         }
       }
     }
-    // fixme?: check if head is nullptr
-    delete head;
+    delete head.ptr();
     return value;
   }
 
 private:
+  struct node;
+  using pointer_type = tagged_pointer<node>;
+
   struct node {
     node() noexcept : next(nullptr) {}
 
@@ -59,30 +64,30 @@ private:
 
     /* data */
     value_type data;
-    std::atomic<node*> next;
+    std::atomic<pointer_type> next;
   };
 
   void enqueue_(node* new_node) {
-    node* tail;
+    pointer_type tail;
     while (true) {
       tail = tail_.load();
-      node* next = tail->next.load();
+      pointer_type next = tail.ptr()->next.load();
       if (tail == tail_) {
-        if (next == nullptr) {
-          if (tail->next.compare_exchange_weak(next, new_node)) {
+        if (next.ptr() == nullptr) {
+          if (tail.ptr()->next.compare_exchange_weak(next, pointer_type(new_node, next.count() + 1))) {
             break;
           }
         } else {
-          tail_.compare_exchange_strong(tail, next);
+          tail_.compare_exchange_strong(tail, pointer_type(next.ptr(), tail.count()));
         }
       }
     }
-    tail_.compare_exchange_strong(tail, new_node);
+    tail_.compare_exchange_strong(tail, pointer_type(new_node, tail.count()));
   }
 
   /* data */
-  std::atomic<node*> head_;
-  std::atomic<node*> tail_;
+  std::atomic<pointer_type> head_;
+  std::atomic<pointer_type> tail_;
 };
 
 TEST_CASE("Basic tests - single thread") {
