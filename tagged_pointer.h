@@ -1,3 +1,5 @@
+#pragma once
+
 #include <atomic>
 #include <cstdint>
 
@@ -34,24 +36,51 @@ private:
 };
 
 TEST_CASE("tagged_pointer - basic test") {
-  int i = 42;
-  tagged_pointer<int> tagptr(&i, 5);
-  REQUIRE(tagptr.count() == 5);
-  REQUIRE(tagptr.ptr() == &i);
-  REQUIRE(*tagptr.ptr() == i);
+  SECTION("stack pointer") {
+    int i = 42;
+    tagged_pointer<int> tagptr(&i, 5);
+    REQUIRE(tagptr.count() == 5);
+    REQUIRE(tagptr.ptr() == &i);
+    REQUIRE(*tagptr.ptr() == i);
+  }
+  SECTION("heap pointer") {
+    int i = new int{42};
+    tagged_pointer<int> tagptr(i, 5);
+    REQUIRE(tagptr.count() == 5);
+    REQUIRE(tagptr.ptr() == i);
+    REQUIRE(*tagptr.ptr() == *i);
+    delete i;
+  }
 }
 
 TEST_CASE("tagged_pointer - size test") {
-  int i = 42;
-  tagged_pointer<int> a(&i, 5);
-  REQUIRE(sizeof(a) == sizeof(&i));
+  SECTION("stack pointer") {
+    int i = 42;
+    tagged_pointer<int> a(&i, 5);
+    REQUIRE(sizeof(a) == sizeof(&i));
+  }
+  SECTION("heap pointer") {
+    int* i = new int{42};
+    tagged_pointer<int> a(i, 5);
+    REQUIRE(sizeof(a) == sizeof(i));
+    delete i;
+  }
 }
 
 TEST_CASE("tagged_pointer - operator==") {
-  int i = 42;
-  tagged_pointer<int> a(&i, 5);
-  tagged_pointer<int> b(&i, 5);
-  REQUIRE(a == b);
+  SECTION("stack pointer") {
+    int i = 42;
+    tagged_pointer<int> a(&i, 5);
+    tagged_pointer<int> b(&i, 5);
+    REQUIRE(a == b);
+  }
+  SECTION("heap pointer") {
+    int i = new int{42};
+    tagged_pointer<int> a(i, 5);
+    tagged_pointer<int> b(i, 5);
+    REQUIRE(a == b);
+    delete i;
+  }
 }
 
 }

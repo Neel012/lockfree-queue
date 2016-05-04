@@ -1,3 +1,5 @@
+#pragma once
+
 #include "queue.h"
 
 namespace lockfree {
