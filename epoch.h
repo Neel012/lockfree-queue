@@ -14,11 +14,11 @@ template <typename T>
 struct epoch;
 
 template <typename T>
-struct guard {
+struct epoch_guard {
   using epoch = epoch<T>;
   using limbo_list = typename epoch::limbo_list;
 
-  guard(epoch& e) noexcept : e_{e}, guard_epoch_{e.global_epoch_.load()} {
+  epoch_guard(epoch& e) noexcept : e_{e}, guard_epoch_{e.global_epoch_.load()} {
     e_.active_[guard_epoch_ % epoch_count]++; // observe the current epoch
     if (e_.all_observed_epoch(guard_epoch_) &&
         e_.global_epoch_.compare_exchange_strong(guard_epoch_, guard_epoch_ + 1))
@@ -27,7 +27,7 @@ struct guard {
     }
   }
 
-  ~guard() noexcept {
+  ~epoch_guard() noexcept {
     if (!unpinned_) {
       unpin();
     }
@@ -62,7 +62,7 @@ struct epoch {
   using epoch_garbage = std::array<limbo_list, epoch_count>;
 
 private:
-  friend guard<T>;
+  friend epoch_guard<T>;
 
   void free_epoch(unsigned n) {
     unlinked_[n % epoch_count].clear();
@@ -92,7 +92,7 @@ TEST_CASE("Epoch - Basic test") {
     //auto ggg = e.pin();
   }
   SECTION("") {
-    guard<int> g{e};
+    epoch_guard<int> g{e};
   }
 }
 
