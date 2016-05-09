@@ -18,39 +18,39 @@ struct guard {
   using epoch = epoch<T>;
   using limbo_list = typename epoch::limbo_list;
 
-  guard(epoch& e) noexcept : e_{e}, thread_epoch{e.global.load()} {
-    e_.active[thread_epoch % epoch_count]++; // observe the current epoch
-    if (e_.all_observed_epoch(thread_epoch) &&
-        e_.global.compare_exchange_strong(thread_epoch, thread_epoch + 1))
+  guard(epoch& e) noexcept : e_{e}, guard_epoch_{e.global_epoch_.load()} {
+    e_.active_[guard_epoch_ % epoch_count]++; // observe the current epoch
+    if (e_.all_observed_epoch(guard_epoch_) &&
+        e_.global_epoch_.compare_exchange_strong(guard_epoch_, guard_epoch_ + 1))
     {
-      e_.free_epoch(thread_epoch - 1);
+      e_.free_epoch(guard_epoch_ - 1);
     }
   }
 
   ~guard() noexcept {
-    if (!unpinned) {
+    if (!unpinned_) {
       unpin();
     }
   }
 
   void unlink(T* pointer) {
-    e_.local_unlinked[thread_epoch % epoch_count].emplace_front(pointer);
+    e_.local_unlinked[guard_epoch_ % epoch_count].emplace_front(pointer);
   }
 
   void unpin() {
     // fixme: leaking some memory at the end of a lifetime of the epoch object
     // ... deallocation takes place at the begining of the guarded operation
-    e_.active[thread_epoch % epoch_count]--;
-    e_.merge_garbage(local_unlinked, thread_epoch);
-    unpinned = true;
+    e_.active_[guard_epoch_ % epoch_count]--;
+    e_.merge_garbage(local_unlinked_, guard_epoch_);
+    unpinned_ = true;
   }
 
 private:
   /* data */
   epoch& e_;
-  unsigned thread_epoch;
-  limbo_list local_unlinked;
-  bool unpinned{false};
+  unsigned guard_epoch_;
+  limbo_list local_unlinked_;
+  bool unpinned_{false};
 };
 
 // epoch manages pointers T
@@ -65,34 +65,33 @@ private:
   friend guard<T>;
 
   void free_epoch(unsigned n) {
-    unlinked[n % epoch_count].clear();
+    unlinked_[n % epoch_count].clear();
   }
 
   bool all_observed_epoch(unsigned n) {
-      return active[(n - 1) % epoch_count].load() == 0;
+      return active_[(n - 1) % epoch_count].load() == 0;
   }
 
   void merge_garbage(limbo_list& local_unlinked, unsigned local_epoch) {
-    unlinked[local_epoch % epoch_count].merge(local_unlinked);
+    unlinked_[local_epoch % epoch_count].merge(local_unlinked);
   }
 
   /* data */
-  std::atomic<unsigned> global{1};
-  std::array<std::atomic<unsigned>, epoch_count> active;
-  epoch_garbage unlinked;
+  std::atomic<unsigned> global_epoch_{1};
+  std::array<std::atomic<unsigned>, epoch_count> active_;
+  epoch_garbage unlinked_;
   //thread_local std::array<limbo_list, epoch_count> local_unlinked;
 };
 
 TEST_CASE("Epoch - Basic test") {
   epoch<int> e;
   SECTION("") {
-    //auto g = e.pin();
-  }
-  SECTION("") {
+    // old interface
     //epoch<int>::guard g = e.pin();
+    //epoch<int>::guard gg{e};
+    //auto ggg = e.pin();
   }
   SECTION("") {
-    //epoch<int>::guard g{e};
     guard<int> g{e};
   }
 }
