@@ -1,21 +1,24 @@
+#pragma once
+
 #include <atomic>
 #include <memory>
+#include <iostream>
 #include "tests/catch.hpp"
 
 namespace lockfree {
 
-// fixme: rename to ?garbage
 template <typename T>
-struct list {
+struct garbage_list {
   struct node {
-    T data;
-    //std::unique_ptr<node> next;
+    node(T* ptr) : data{ptr} {}
+
+    std::unique_ptr<T> data;
     node* next = nullptr;
   };
 
-  // Assumes rhs is not beeing accessed concurently
-  // Precondition: Epochs do not observe progress for the duration of this operation.
-  void merge(list& rhs) {
+  // Assumes rhs is not beeing accessed concurrently
+  // Invariant: Epochs do not observe progress for the duration of this operation.
+  void merge(garbage_list& rhs) {
     if (rhs.head_.load() == nullptr) {
       return;
     }
@@ -28,25 +31,14 @@ struct list {
     }
   }
 
-  // template <typename... Args>
-  // void emlpace_front(Args&&... args) {
-  //  //auto new_node = std::make_unique<node>(std::forward<Args>(args)..., head_.load());
-  //  head_.store(new_node);
-  //  if (tail_ == nullptr) {
-  //    tail_ = new_node;
-  //  }
-  //}
-
-  // TODO: make sure unique_ptr takes ownership of passed pointer
-  template <typename... Args>
-  void emlpace_back(Args&&... args) {
-    auto new_node = new node{std::forward<Args>(args)...};
+  void emlpace_back(T* ptr) {
+    auto new_node = new node{ptr};
     if (tail_ == nullptr) {
-      tail_ = new_node;
       head_.store(new_node);
     } else {
       tail_->next = new_node;
     }
+    tail_ = new_node;
   }
 
   void clear() {
@@ -59,11 +51,12 @@ struct list {
       n = n->next;
       delete d;
     }
+    delete n;
   }
 
 private:
-  std::atomic<node*> head_ {nullptr};
-  node* tail_ {nullptr};
+  std::atomic<node*> head_{nullptr};
+  node* tail_{nullptr};
 };
 
 namespace {
@@ -82,9 +75,21 @@ int test_counter::n{0};
 
 TEST_CASE("Garbage List - Basic test") {
   SECTION("Proper deallocation") {
-    list<test_counter> l;
+    garbage_list<test_counter> l;
     for (int i{0}; i < 20; i++) {
-      l.emlpace_back();
+      l.emlpace_back(new test_counter{});
+    }
+    l.clear();
+    REQUIRE(test_counter::n == 0);
+  }
+  SECTION("Proper deallocation") {
+    std::vector<test_counter*> vec;
+    for (int i{0}; i < 10; i++) {
+      vec.push_back(new test_counter{});
+    }
+    garbage_list<test_counter> l;
+    for (int i{0}; i < 10; i++) {
+      l.emlpace_back(vec[i]);
     }
     l.clear();
     REQUIRE(test_counter::n == 0);
