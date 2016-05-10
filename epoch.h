@@ -66,7 +66,7 @@ private:
   }
 
   bool all_observed_epoch(unsigned n) {
-      return active_[(n - 1) % epoch_count].load() == 0;
+    return active_[(n - 1) % epoch_count].load() == 0;
   }
 
   void merge_garbage(limbo_list& local_unlinked, unsigned local_epoch) {
@@ -82,12 +82,6 @@ private:
 
 TEST_CASE("Epoch - Basic test") {
   epoch<int> e;
-  SECTION("") {
-    // old interface
-    //epoch<int>::guard g = e.pin();
-    //epoch<int>::guard gg{e};
-    //auto ggg = e.pin();
-  }
   SECTION("") {
     epoch_guard<int> g{e};
   }
