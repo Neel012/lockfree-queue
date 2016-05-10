@@ -2,8 +2,7 @@
 
 #include <atomic>
 #include <cassert>
-#include <forward_list>
-#include "list.h"
+#include "garbage_list.h"
 #include "tests/catch.hpp"
 
 namespace lockfree {
@@ -56,9 +55,7 @@ private:
 // epoch manages pointers T
 template <typename T>
 struct epoch {
-  //using limbo_list = std::forward_list<std::unique_ptr<T>>;
-  using limbo_list = list<std::unique_ptr<T>>;
-  //using limbo_list = list<T*>;
+  using limbo_list = garbage_list<T>;
   using epoch_garbage = std::array<limbo_list, epoch_count>;
 
 private:
