@@ -14,8 +14,8 @@ struct ms_queue : queue<T> {
 
   ms_queue() {
     pointer_type new_node(new node());
-    tail_ = new_node;
-    head_ = new_node;
+    tail_.store(new_node);
+    head_.store(new_node);
   }
 
   void enqueue(value_type& value) final {
