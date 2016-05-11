@@ -59,7 +59,7 @@ private:
   node* tail_{nullptr};
 };
 
-namespace {
+namespace tests {
 
 struct test_counter {
   static int n;
@@ -96,4 +96,5 @@ TEST_CASE("Garbage List - Basic test") {
   }
 }
 
-}
+} // namespace tests
+} // namespace lockfree

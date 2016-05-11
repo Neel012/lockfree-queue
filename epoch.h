@@ -80,6 +80,8 @@ private:
   //thread_local std::array<limbo_list, epoch_count> local_unlinked;
 };
 
+namespace tests {
+
 TEST_CASE("Epoch - Basic test") {
   epoch<int> e;
   SECTION("") {
@@ -87,4 +89,5 @@ TEST_CASE("Epoch - Basic test") {
   }
 }
 
-}
+} // namespace tests
+} // namespace lockfree

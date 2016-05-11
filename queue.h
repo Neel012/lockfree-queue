@@ -19,4 +19,4 @@ struct queue {
 
 };
 
-}
+} // namespace lockfree
