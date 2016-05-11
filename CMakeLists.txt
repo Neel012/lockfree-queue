@@ -5,21 +5,21 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(common
-    tagged_pointer.h
-    ms_queue.h
-    list.h
-    epoch.h
-    epoch_queue.h
+    tagged_pointer.hpp
+    ms_queue.hpp
+    garbage_list.hpp
+    epoch.hpp
+    epoch_queue.hpp
     tests/common.cpp
 )
 
 add_executable(epoch
-    list.h
-    epoch.h
+    garbage_list.hpp
+    epoch.hpp
     tests/epoch.cpp
 )
 
 add_executable(tagged_pointer
-    tagged_pointer.h
+    tagged_pointer.hpp
     tests/tagged_pointer.cpp
 )
