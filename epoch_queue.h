@@ -31,4 +31,9 @@ private:
   using pointer_type = node*;
 };
 
+namespace tests {
+
 }
+
+} // namespace tests
+} // namespace lockfree

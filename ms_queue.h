@@ -90,6 +90,8 @@ private:
   std::atomic<pointer_type> tail_;
 };
 
+namespace tests {
+
 TEST_CASE("Basic tests - single thread") {
   ms_queue<int> q;
   q.enqueue(1);
@@ -100,4 +102,5 @@ TEST_CASE("Basic tests - single thread") {
   REQUIRE(*q.dequeue() == 3);
 }
 
-}
+} // namespace tests
+} // namespace lockfree
