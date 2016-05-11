@@ -23,7 +23,7 @@ struct garbage_list {
   // Assumes rhs is not beeing accessed concurrently
   // Invariant: Epochs do not observe progress for the duration of this operation.
   void merge(garbage_list& rhs) {
-    if (rhs.head_.load() == nullptr) {
+    if (rhs.tail_ == nullptr) {
       return;
     }
     while (true) {
