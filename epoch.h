@@ -83,10 +83,15 @@ private:
 namespace tests {
 
 TEST_CASE("Epoch - Basic test") {
-  epoch<int> e;
-  SECTION("") {
-    epoch_guard<int> g{e};
+  int i{0};
+  epoch<test_counter> e;
+  std::vector<test_counter*> vec{new test_counter{i}, new test_counter{i},
+                                 new test_counter{i}, new test_counter{i}};
+  epoch_guard<test_counter> g{e};
+  for (auto& v : vec) {
+    g.unlink(v);
   }
+  REQUIRE(i == 0);
 }
 
 } // namespace tests
