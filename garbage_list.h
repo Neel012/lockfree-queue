@@ -62,37 +62,34 @@ private:
 namespace tests {
 
 struct test_counter {
-  static int n;
-
-  test_counter() { n++; }
+  test_counter(int& i) : n{i} { n++; }
 
   ~test_counter() { n--; }
+
+  int& n;
 };
 
-int test_counter::n{0};
-
-}
-
 TEST_CASE("Garbage List - Basic test") {
+  int counter{0};
   SECTION("Proper deallocation") {
     garbage_list<test_counter> l;
     for (int i{0}; i < 20; i++) {
       l.emplace_back(new test_counter{counter});
     }
     l.clear();
-    REQUIRE(test_counter::n == 0);
+    REQUIRE(counter == 0);
   }
-  SECTION("Proper deallocation") {
+  SECTION("Proper deallocation 2") {
     std::vector<test_counter*> vec;
     for (int i{0}; i < 10; i++) {
-      vec.push_back(new test_counter{});
+      vec.push_back(new test_counter{counter});
     }
     garbage_list<test_counter> l;
     for (int i{0}; i < 10; i++) {
       l.emplace_back(vec[i]);
     }
     l.clear();
-    REQUIRE(test_counter::n == 0);
+    REQUIRE(counter == 0);
   }
 }
 
