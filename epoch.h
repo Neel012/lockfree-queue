@@ -33,10 +33,10 @@ struct epoch_guard {
   }
 
   void unlink(T* pointer) {
-    e_.local_unlinked[guard_epoch_ % epoch_count].emplace_front(pointer);
+    local_unlinked_.emplace_back(pointer);
   }
 
-  void unpin() {
+  void unpin() noexcept {
     // fixme: leaking some memory at the end of a lifetime of the epoch object
     // ... deallocation takes place at the begining of the guarded operation
     e_.active_[guard_epoch_ % epoch_count]--;
