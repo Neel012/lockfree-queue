@@ -60,15 +60,15 @@ private:
   using pointer_type = tagged_pointer<node>;
 
   struct node {
-    node() noexcept : next(nullptr) {}
+    node() = default;
 
-    node(value_type& d) : data(d), next(nullptr) {}
+    node(value_type& d) : data(d) {}
 
-    node(value_type&& d) : data(std::move(d)), next(nullptr) {}
+    node(value_type&& d) : data(std::move(d)) {}
 
     /* data */
     value_type data;
-    std::atomic<pointer_type> next;
+    std::atomic<pointer_type> next{nullptr};
   };
 
   void enqueue_(node* new_node) {
