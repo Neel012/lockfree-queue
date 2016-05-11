@@ -1,8 +1,8 @@
 #pragma once
 
 #include <atomic>
-#include "queue.h"
-#include "tagged_pointer.h"
+#include "queue.hpp"
+#include "tagged_pointer.hpp"
 #include "tests/catch.hpp"
 
 namespace lockfree {

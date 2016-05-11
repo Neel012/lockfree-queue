@@ -1,7 +1,7 @@
 #pragma once
 
-#include "queue.h"
-#include "epoch.h"
+#include "queue.hpp"
+#include "epoch.hpp"
 
 namespace lockfree {
 
