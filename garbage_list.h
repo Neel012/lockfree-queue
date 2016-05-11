@@ -16,6 +16,10 @@ struct garbage_list {
     node* next = nullptr;
   };
 
+  ~garbage_list() noexcept {
+    clear();
+  }
+
   // Assumes rhs is not beeing accessed concurrently
   // Invariant: Epochs do not observe progress for the duration of this operation.
   void merge(garbage_list& rhs) {
@@ -41,7 +45,7 @@ struct garbage_list {
     tail_ = new_node;
   }
 
-  void clear() {
+  void clear() noexcept {
     node* n = head_.load();
     if (n == nullptr) {
       return;
@@ -52,6 +56,8 @@ struct garbage_list {
       delete d;
     }
     delete n;
+    head_.store(nullptr);
+    tail_ = nullptr;
   }
 
 private:
