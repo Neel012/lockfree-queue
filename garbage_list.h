@@ -31,7 +31,7 @@ struct garbage_list {
     }
   }
 
-  void emlpace_back(T* ptr) {
+  void emplace_back(T* ptr) {
     auto new_node = new node{ptr};
     if (tail_ == nullptr) {
       head_.store(new_node);
@@ -77,7 +77,7 @@ TEST_CASE("Garbage List - Basic test") {
   SECTION("Proper deallocation") {
     garbage_list<test_counter> l;
     for (int i{0}; i < 20; i++) {
-      l.emlpace_back(new test_counter{});
+      l.emplace_back(new test_counter{counter});
     }
     l.clear();
     REQUIRE(test_counter::n == 0);
@@ -89,7 +89,7 @@ TEST_CASE("Garbage List - Basic test") {
     }
     garbage_list<test_counter> l;
     for (int i{0}; i < 10; i++) {
-      l.emlpace_back(vec[i]);
+      l.emplace_back(vec[i]);
     }
     l.clear();
     REQUIRE(test_counter::n == 0);
