@@ -7,13 +7,14 @@
 
 namespace lockfree {
 
+// TODO: split interfaces for concurrent access and single-threaded access
 template <typename T>
 struct garbage_list {
   struct node {
     node(T* ptr) : data{ptr} {}
 
     std::unique_ptr<T> data;
-    node* next = nullptr;
+    node* next{nullptr};
   };
 
   ~garbage_list() noexcept {
@@ -22,6 +23,7 @@ struct garbage_list {
 
   // Assumes rhs is not beeing accessed concurrently
   // Invariant: Epochs do not observe progress for the duration of this operation.
+  // Does not update tail_
   void merge(garbage_list& rhs) {
     if (rhs.tail_ == nullptr) {
       return;
@@ -35,6 +37,7 @@ struct garbage_list {
     }
   }
 
+  // Assumes *this is not beeing accessed concurrently
   void emplace_back(T* ptr) {
     auto new_node = new node{ptr};
     if (tail_ == nullptr) {
@@ -62,7 +65,7 @@ struct garbage_list {
 
 private:
   std::atomic<node*> head_{nullptr};
-  node* tail_{nullptr};
+  node* tail_{nullptr}; // tail is not valid if the structure is being accessed/modified concurrently
 };
 
 namespace tests {
