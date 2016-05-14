@@ -38,8 +38,8 @@ struct epoch_guard {
   void unpin() noexcept {
     // fixme: leaking some memory at the end of a lifetime of the epoch object
     // ... deallocation takes place at the begining of the guarded operation
-    e_.active_[guard_epoch_ % epoch_count]--;
     e_.merge_garbage(local_unlinked_, guard_epoch_);
+    e_.active_[guard_epoch_ % epoch_count]--;
     unpinned_ = true;
   }
 
