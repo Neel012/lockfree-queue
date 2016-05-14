@@ -19,8 +19,7 @@ struct epoch_guard {
 
   epoch_guard(epoch& e) noexcept : e_{e}, guard_epoch_{e.global_epoch_.load()} {
     e_.active_[guard_epoch_ % epoch_count]++; // observe the current epoch
-    if (e_.all_observed_epoch(guard_epoch_) &&
-        e_.global_epoch_.compare_exchange_strong(guard_epoch_, guard_epoch_ + 1))
+    if (e_.all_observed_epoch(guard_epoch_) && e_.progress_epoch(guard_epoch_))
     {
       e_.free_epoch(guard_epoch_ - 1);
     }
@@ -67,6 +66,10 @@ private:
 
   bool all_observed_epoch(unsigned n) {
     return active_[(n - 1) % epoch_count].load() == 0;
+  }
+
+  bool progress_epoch(unsigned guard_epoch) {
+    return global_epoch_.compare_exchange_strong(guard_epoch, guard_epoch + 1);
   }
 
   void merge_garbage(limbo_list& local_unlinked, unsigned local_epoch) {
