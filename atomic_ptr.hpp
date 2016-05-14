@@ -12,6 +12,14 @@ struct atomic_ptr {
     reset();
   }
 
+  bool operator==(atomic_ptr& rhs) {
+    return load() == rhs.load();
+  }
+
+  bool operator==(std::nullptr_t) {
+    return load() == nullptr;
+  }
+
   void reset() {
     if (pointer_ != nullptr) {
       delete pointer_;
