@@ -15,7 +15,7 @@ struct tagged_pointer {
   }
 
   T* ptr() const {
-    return static_cast<T*>(ptr_mask & value_.ptr);
+    return (T*)(ptr_mask & value_.ptr);
   }
 
   uint16_t count() const {
