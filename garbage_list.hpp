@@ -111,5 +111,42 @@ TEST_CASE("Garbage List - Basic test") {
   }
 }
 
+TEST_CASE("Garbage - Basic test") {
+  int counter{0};
+
+  SECTION("merge one list") {
+    garbage<test_counter> g;
+    constexpr unsigned n = 3;
+    {
+      garbage_list<test_counter> l;
+      for (unsigned i{0}; i < n; i++) {
+        l.emplace_back(new test_counter{counter});
+      }
+      REQUIRE(counter == n);
+      g.merge(l);
+      REQUIRE(counter == n);
+    }
+    REQUIRE(counter == n);
+  }
+
+  SECTION("Proper deallocation") {
+    garbage<test_counter> g;
+    {
+      garbage_list<test_counter> l;
+      for (int i{0}; i < 20; i++) {
+        l.emplace_back(new test_counter{counter});
+      }
+      garbage_list<test_counter> m;
+      for (int i{0}; i < 20; i++) {
+        m.emplace_back(new test_counter{counter});
+      }
+      g.merge(l);
+      g.merge(m);
+    }
+    g.clear();
+    REQUIRE(counter == 0);
+  }
+}
+
 } // namespace tests
 } // namespace lockfree
