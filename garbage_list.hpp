@@ -3,69 +3,78 @@
 #include <atomic>
 #include <memory>
 #include <iostream>
+#include "atomic_ptr.hpp"
 #include "tests/catch.hpp"
 
 namespace lockfree {
 
-// TODO: split interfaces for concurrent access and single-threaded access
+template <typename T>
+struct garbage;
+
+// Thread local garbage
 template <typename T>
 struct garbage_list {
   struct node {
     node(T* ptr) : data{ptr} {}
 
     std::unique_ptr<T> data;
-    node* next{nullptr};
+    std::unique_ptr<node> next{nullptr};
   };
 
-  ~garbage_list() noexcept {
-    clear();
+  void clear() {
+    head_.reset();
+    tail_ = nullptr;
   }
 
-  // Assumes rhs is not beeing accessed concurrently
-  // Invariant: Epochs do not observe progress for the duration of this operation.
-  // Does not update tail_
-  void merge(garbage_list& rhs) {
-    if (rhs.tail_ == nullptr) {
-      return;
-    }
-    while (true) {
-      node* head = head_.load();
-      rhs.tail_->next = head;
-      if (head_.compare_exchange_weak(head, rhs.head_)) {
-        break;
-      }
-    }
+  bool empty() const {
+    return head_ == nullptr;
   }
 
   // Assumes *this is not beeing accessed concurrently
   void emplace_back(T* ptr) {
-    auto new_node = new node{ptr};
-    if (tail_ == nullptr) {
-      head_.store(new_node);
+    auto* new_node = new node{ptr};
+    if (head_ == nullptr) {
+      head_.reset(new_node);
     } else {
-      tail_->next = new_node;
+      tail_->next.reset(new_node);
     }
     tail_ = new_node;
   }
 
-  void clear() noexcept {
-    node* n = head_.load();
-    if (n == nullptr) {
+private:
+  friend garbage<T>;
+  std::unique_ptr<node> head_{nullptr};
+  node* tail_{nullptr};
+};
+
+// Global garbage
+template <typename T>
+struct garbage {
+  using node = typename garbage_list<T>::node;
+
+  void clear() {
+    head_.reset();
+  }
+
+  // Assumes g is not beeing accessed concurrently
+  // Invariant: Epochs do not observe progress for the duration of this operation.
+  void merge(garbage_list<T>& g) {
+    if (g.empty()) {
       return;
     }
-    while (n->next != nullptr) {
-      node* d = n;
-      n = n->next;
-      delete d;
+    while (true) {
+      node* head = head_.load();
+      g.tail_->next.reset(head);
+      if (head_.compare_exchange_weak(head, g.head_.get())) {
+        g.head_.release();
+        break;
+      }
+      g.tail_->next.release();
     }
-    delete n;
-    head_.store(nullptr);
-    tail_ = nullptr;
   }
 
 private:
-  std::atomic<node*> head_{nullptr};
-  node* tail_{nullptr}; // tail is not valid if the structure is being accessed/modified concurrently
+  atomic_ptr<node> head_{nullptr};
 };
 
 namespace tests {
