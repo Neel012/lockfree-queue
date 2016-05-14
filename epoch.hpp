@@ -83,26 +83,4 @@ private:
   //thread_local std::array<limbo_list, epoch_count> local_unlinked;
 };
 
-namespace tests {
-
-TEST_CASE("Epoch - Basic test") {
-  int counter{0};
-  {
-    epoch<test_counter> e;
-    std::vector<test_counter*> vec{
-        new test_counter{counter}, new test_counter{counter},
-        new test_counter{counter}, new test_counter{counter}};
-    {
-      epoch_guard<test_counter> g{e};
-      for (auto& v : vec)
-      {
-        g.unlink(v);
-      }
-    }
-    REQUIRE(counter == 4);
-  }
-  REQUIRE(counter == 0);
-}
-
-} // namespace tests
 } // namespace lockfree

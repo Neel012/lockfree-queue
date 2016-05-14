@@ -87,17 +87,4 @@ private:
   epoch<node> epoch_;
 };
 
-namespace tests {
-
-TEST_CASE("Epoch Queue - Basic tests - single thread") {
-  epoch_queue<int> q;
-  q.enqueue(1);
-  q.enqueue(2);
-  q.enqueue(3);
-  REQUIRE(*q.dequeue() == 1);
-  REQUIRE(*q.dequeue() == 2);
-  REQUIRE(*q.dequeue() == 3);
-}
-
-} // namespace tests
 } // namespace lockfree
