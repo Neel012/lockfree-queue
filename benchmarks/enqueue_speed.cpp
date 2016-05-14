@@ -1,8 +1,11 @@
-#include "../ms_queue.h"
+#include <assert.h>
+#include "../queue.h"
 
 
 
-int main(int argc,  char** argv) {
+
+int main() {
+    int threads_count = 2;
 
 
 }
