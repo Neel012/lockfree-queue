@@ -31,7 +31,7 @@ struct epoch_guard {
     }
   }
 
-  void unlink(T* pointer) {
+  void unlink(T* pointer) noexcept {
     local_unlinked_.emplace_back(pointer);
   }
 
@@ -60,19 +60,19 @@ struct epoch {
 private:
   friend epoch_guard<T>;
 
-  void free_epoch(unsigned n) {
+  void free_epoch(unsigned n) noexcept {
     unlinked_[n % epoch_count].clear();
   }
 
-  bool all_observed_epoch(unsigned n) {
+  bool all_observed_epoch(unsigned n) noexcept {
     return active_[(n - 1) % epoch_count].load() == 0;
   }
 
-  bool progress_epoch(unsigned guard_epoch) {
+  bool progress_epoch(unsigned guard_epoch) noexcept {
     return global_epoch_.compare_exchange_strong(guard_epoch, guard_epoch + 1);
   }
 
-  void merge_garbage(limbo_list& local_unlinked, unsigned local_epoch) {
+  void merge_garbage(limbo_list& local_unlinked, unsigned local_epoch) noexcept {
     unlinked_[local_epoch % epoch_count].merge(local_unlinked);
   }
 
