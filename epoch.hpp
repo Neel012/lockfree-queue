@@ -56,7 +56,7 @@ private:
 template <typename T>
 struct epoch {
   using limbo_list = garbage_list<T>;
-  using epoch_garbage = std::array<limbo_list, epoch_count>;
+  using epoch_garbage = std::array<garbage<T>, epoch_count>;
 
 private:
   friend epoch_guard<T>;
@@ -83,15 +83,22 @@ private:
 namespace tests {
 
 TEST_CASE("Epoch - Basic test") {
-  int i{0};
-  epoch<test_counter> e;
-  std::vector<test_counter*> vec{new test_counter{i}, new test_counter{i},
-                                 new test_counter{i}, new test_counter{i}};
-  epoch_guard<test_counter> g{e};
-  for (auto& v : vec) {
-    g.unlink(v);
+  int counter{0};
+  {
+    epoch<test_counter> e;
+    std::vector<test_counter*> vec{
+        new test_counter{counter}, new test_counter{counter},
+        new test_counter{counter}, new test_counter{counter}};
+    {
+      epoch_guard<test_counter> g{e};
+      for (auto& v : vec)
+      {
+        g.unlink(v);
+      }
+    }
+    REQUIRE(counter == 4);
   }
-  REQUIRE(i == 0);
+  REQUIRE(counter == 0);
 }
 
 } // namespace tests
