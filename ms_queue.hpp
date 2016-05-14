@@ -38,7 +38,7 @@ struct ms_queue : queue<T> {
           if (next.ptr() == nullptr) {
             return optional();
           }
-          tail_.compare_exchange_strong(tail, pointer_type(next.ptr(), tail.count() + 1));
+          tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count() + 1));
         } else {
           value = next.ptr()->data;
           if (head_.compare_exchange_weak(head, pointer_type(next.ptr(), head.count() + 1))) {
@@ -57,9 +57,7 @@ private:
 
   struct node {
     node() = default;
-
     node(value_type& d) : data(d) {}
-
     node(value_type&& d) : data(std::move(d)) {}
 
     /* data */
@@ -78,11 +76,11 @@ private:
             break;
           }
         } else {
-          tail_.compare_exchange_strong(tail, pointer_type(next.ptr(), tail.count()));
+          tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count()));
         }
       }
     }
-    tail_.compare_exchange_strong(tail, pointer_type(new_node, tail.count()));
+    tail_.compare_exchange_weak(tail, pointer_type(new_node, tail.count()));
   }
 
   /* data */
