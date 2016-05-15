@@ -2,7 +2,7 @@
 
 #include <atomic>
 #include <cassert>
-#include "garbage_list.hpp"
+#include "garbage.hpp"
 
 namespace lockfree {
 
