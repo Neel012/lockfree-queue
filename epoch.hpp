@@ -35,7 +35,7 @@ private:
   std::atomic<unsigned> global_epoch_{1};
   std::array<std::atomic<unsigned>, epoch_count> active_;
   std::array<garbage_stack, epoch_count> unlinked_;
-  //thread_local std::array<limbo_list, epoch_count> local_unlinked;
+  // static thread_local std::array<garbage, epoch_count> local_unlinked;
 };
 
 struct epoch_guard {
