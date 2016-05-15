@@ -67,10 +67,28 @@ TEST_CASE("ms_queue - single thread") {
   REQUIRE(*q.dequeue() == 3);
 }
 
-TEST_CASE("garbage_list - Basic test") {
+TEST_CASE("any_ptr - Basic test") {
   int counter{0};
-  SECTION("Proper deallocation") {
-    garbage_list<test_counter> l;
+  auto* t = new test_counter{counter};
+  SECTION("Correct destruction") {
+    {
+      any_ptr a{t};
+      REQUIRE(counter == 1);
+    }
+    REQUIRE(counter == 0);
+  }
+  SECTION("Move constructor") {
+    {
+      //auto a = make_any_ptr(t);
+      any_ptr a{t};
+      //REQUIRE(counter == 1);
+      any_ptr b{std::move(a)};
+      REQUIRE(counter == 1);
+    }
+    REQUIRE(counter == 0);
+  }
+}
+
     for (int i{0}; i < 20; i++) {
       l.emplace_back(new test_counter{counter});
     }
