@@ -8,130 +8,127 @@
 #include <unistd.h>
 
 
-using benchmark_t = std::function<double(lockfree::queue<int> &, int, int)>;
-
-double pure_deenqueue_speed(lockfree::queue<int> &queue, int threads_count, int number_of_enqueues) {
-  std::vector<std::thread> threads;
-  bool wait = true;
-  int number_of_enqueues_per_thread = number_of_enqueues / threads_count;
-
-  auto f = [&] {
-    while (wait) { };
-    for (int o = 0; o < number_of_enqueues_per_thread; ++o) {
-      queue.enqueue(0);
-      queue.dequeue();
-    }
-  };
-
-  for (int i = 0; i < threads_count; ++i) {
-    threads.push_back(std::thread(f));
-  }
-
-  auto start = std::chrono::system_clock::now();
-
-  wait = false;
-  for (auto &thread : threads) {
-    thread.join();
-  }
-
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> diff = end - start;
-  return diff.count();
-}
-
-
-double pure_dequeue_speed(lockfree::queue<int> &queue, int threads_count, int number_of_enqueues) {
-  std::vector<std::thread> threads;
-  bool wait = true;
-  int number_of_enqueues_per_thread = number_of_enqueues / threads_count;
-
-  for (int o = 0; o < number_of_enqueues; ++o) queue.enqueue(0);
-
-  auto f = [&] {
-    while (wait) { };
-    for (int o = 0; o < number_of_enqueues_per_thread; ++o) {
-      queue.enqueue(0);
-      queue.dequeue();
-    }
-
-  };
-
-  for (int i = 0; i < threads_count; ++i) {
-    threads.push_back(std::thread(f));
-  }
-
-  auto start = std::chrono::system_clock::now();
-
-  wait = false;
-  for (auto &thread : threads) {
-    thread.join();
-  }
-
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> diff = end - start;
-  return diff.count();
-}
-
-
-double pure_enqueue_speed(lockfree::queue<int> &queue, int threads_count, int number_of_enqueues) {
-  std::vector<std::thread> threads;
-  bool wait = true;
-  int number_of_enqueues_per_thread = number_of_enqueues / threads_count;
-
-  auto f = [&] {
-    while (wait) { };
-    for (int o = 0; o < number_of_enqueues_per_thread; ++o) queue.enqueue(0);
-  };
-
-  for (int i = 0; i < threads_count; ++i) {
-    threads.push_back(std::thread(f));
-  }
-
-  auto start = std::chrono::system_clock::now();
-
-  wait = false;
-  for (auto &thread : threads) {
-    thread.join();
-  }
-
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> diff = end - start;
-  return diff.count();
-}
-
-
 template<typename Queue>
-double run(int threads_num, benchmark_t fn, int times = 1) {
-  Queue queue;
-  double sum = 0;
-  for (int i = 0; i < times; ++i) {
-    sum += fn(queue, threads_num, 1000000);
-    usleep(100000);
+struct BaseBenchmark {
+
+  BaseBenchmark(int size, int threads_count, int num_of_runs) :
+      size(size),
+      threads_count(threads_count),
+      num_of_runs(num_of_runs) { }
+
+  virtual void prepare_fn(Queue &, int) = 0;
+
+  virtual void benchmark_fn(Queue &, int) = 0;
+
+  double one_run() {
+    Queue queue;
+    std::vector<std::thread> threads;
+    volatile bool wait = true;
+    int size_per_thread = size / threads_count;
+
+    prepare_fn(queue, size_per_thread);
+
+
+    auto bnchm = [&] {
+      while (wait) { };
+      benchmark_fn(queue, size_per_thread);
+    };
+
+    for (int i = 0; i < threads_count; ++i)
+      threads.push_back(std::thread(bnchm));
+
+
+    usleep(10000);
+    auto start = std::chrono::system_clock::now();
+    wait = false;
+
+    for (auto &thread : threads)
+      thread.join();
+
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = end - start;
+    return diff.count();
   }
-  return sum / times;
+
+  double run() {
+    double sum = 0;
+    for (int i = 0; i < num_of_runs; ++i) {
+      sum += one_run();
+      usleep(10000);
+    }
+    std::cout <<
+    "name: " << typeid(*this).name() <<
+    "\tthreads: " << threads_count <<
+    "\ttime: " << sum / num_of_runs << std::endl;
+    return sum / num_of_runs;
+  }
+
+  int size;
+  int threads_count;
+  int num_of_runs;
+
 };
 
 template<typename Queue>
-void run_queue(std::vector<std::pair<std::string, benchmark_t>> &benchmarks) {
-  for (auto fn : benchmarks) {
-    std::cout << "benchmark: " << fn.first << std::endl;
-    for (int i = 0; i < 4; ++i) {
-      int ts = (1 << i);
-      std::cout << "threads: " << ts << std::endl;
-      std::cout << "time: " << run<Queue>(ts, fn.second, 10) << std::endl;
-    }
-    std::cout << std::endl;
+struct DequeueBenchmark : public BaseBenchmark<Queue> {
+
+  DequeueBenchmark(int size, int threads_count, int num_of_runs, bool autorun = false) :
+      BaseBenchmark<Queue>(size, threads_count, num_of_runs) {
+    if (autorun) this->run();
   }
+
+  virtual void prepare_fn(Queue &queue, int size) {
+    for (int i = 0; i < size; ++i) queue.enqueue(0);
+  }
+
+  virtual void benchmark_fn(Queue &queue, int size) {
+    for (int i = 0; i < size; ++i) queue.dequeue();
+  }
+
 };
+
+template<typename Queue>
+struct EnqueueBenchmark : public BaseBenchmark<Queue> {
+
+  EnqueueBenchmark(int size, int threads_count, int num_of_runs, bool autorun = false) :
+      BaseBenchmark<Queue>(size, threads_count, num_of_runs) {
+    if (autorun) this->run();
+  }
+
+  virtual void prepare_fn(Queue &, int) { }
+
+  virtual void benchmark_fn(Queue &queue, int size) {
+    for (int i = 0; i < size; ++i) queue.enqueue(0);
+  }
+
+};
+
+template<typename Queue>
+struct EndequeueBenchmark : public BaseBenchmark<Queue> {
+
+  EndequeueBenchmark(int size, int threads_count, int num_of_runs, bool autorun = false) :
+      BaseBenchmark<Queue>(size, threads_count, num_of_runs) {
+    if (autorun) this->run();
+  }
+
+  virtual void prepare_fn(Queue &, int) { }
+
+  virtual void benchmark_fn(Queue &queue, int size) {
+    for (int i = 0; i < size; ++i) {
+      queue.enqueue(0);
+      queue.dequeue();
+    }
+  }
+
+};
+
 
 int main() {
-  std::vector<std::pair<std::string, benchmark_t>> benchmarks;
-  benchmarks.push_back(std::make_pair("pure_enqueue_speed", pure_enqueue_speed));
-  benchmarks.push_back(std::make_pair("pure_dequeue_speed", pure_dequeue_speed));
-  benchmarks.push_back(std::make_pair("pure_deenqueue_speed", pure_deenqueue_speed));
+  for (int i = 1; i < 8; i = i << 1) EnqueueBenchmark<lockfree::mutex_queue<int>>(10000000, i, 5, true);
+  for (int i = 1; i < 8; i = i << 1) EnqueueBenchmark<lockfree::ms_queue<int>>(10000000, i, 5, true);
 
-  std::cout << "mutex_queue" << std::endl;
-  run_queue<lockfree::mutex_queue<int>>(benchmarks);
-  std::cout << "ms_queue" << std::endl;
-  run_queue<lockfree::ms_queue<int>>(benchmarks);
+  for (int i = 1; i < 8; i = i << 1) DequeueBenchmark<lockfree::mutex_queue<int>>(10000000, i, 5, true);
+  for (int i = 1; i < 8; i = i << 1) DequeueBenchmark<lockfree::ms_queue<int>>(10000000, i, 5, true);
+
+
 }
