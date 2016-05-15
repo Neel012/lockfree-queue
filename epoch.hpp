@@ -19,7 +19,7 @@ private:
     unlinked_[n % epoch_count].clear();
   }
 
-  bool all_observed_epoch(unsigned n) noexcept {
+  bool all_observed_epoch(unsigned n) const noexcept {
     return active_[(n - 1) % epoch_count].load() == 0;
   }
 
@@ -40,7 +40,9 @@ private:
 
 struct epoch_guard {
 
-  epoch_guard(epoch& e) noexcept : e_{e}, guard_epoch_{e.global_epoch_.load()} {
+  explicit epoch_guard(epoch& e) noexcept
+    : e_{e}, guard_epoch_{e.global_epoch_.load()}
+  {
     e_.active_[guard_epoch_ % epoch_count]++; // observe the current epoch
     if (e_.all_observed_epoch(guard_epoch_) && e_.progress_epoch(guard_epoch_))
     {
