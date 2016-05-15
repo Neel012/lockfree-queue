@@ -17,11 +17,11 @@ struct my_queue : queue<T> {
 
     /* data */
     value_type value;
-    std::atomic<Node *> previous{nullptr};
+    volatile Node * previous{nullptr};
   };
 
-  std::atomic<Node *> back{nullptr};
-  std::atomic<Node *> front{nullptr};
+  std::atomic<volatile Node *> back{nullptr};
+  std::atomic<volatile Node *> front{nullptr};
 
 
   void enqueue(value_type &value) final {
@@ -41,7 +41,7 @@ struct my_queue : queue<T> {
   }
 
   void enqueue_(Node *node) {
-    Node *old_back = back.exchange(node);
+    volatile Node *old_back = back.exchange(node);
     if (old_back == nullptr) {
       front = node;
     } else {
@@ -49,29 +49,50 @@ struct my_queue : queue<T> {
     }
   }
 
+//  mene lock-free verze, ale funguje na 100%.
   optional dequeue() {
-    optional value;
-    Node *_front = front;
-    Node *_previous;
-    while (true) {
-      if (_front == nullptr) {
-        return optional();
+    volatile Node *old_front = front.exchange(nullptr);
+    if (!old_front) {
+      return optional();
+    }
+    volatile Node * _front = old_front;
+    if (!back.compare_exchange_strong(_front, nullptr)) {
+      while (true) {
+        _front = old_front->previous;
+        if (_front) break;
       }
-      _previous = _front->previous;
-      if (front.compare_exchange_strong(_front, _front->previous)) {
-        Node * __front = _front;
-        back.compare_exchange_strong(__front, nullptr);
-
-        if (!front && !_previous && _front->previous.load()) {
-          front = _front->previous.load();
-        }
-        value = _front->value;
-        delete _front;
-        break;
-      }
+      front = _front;
     }
 
+    optional value = static_cast<int>(old_front->value);
+    delete old_front;
     return value;
   }
+// //  vice lock-free verze, ale funguje na 80% (někdy, v jednom benchmarku spadne, ale.. skoro bez chyby)
+//  optional dequeue() {
+//    optional value;
+//    Node *_front = front;
+//    Node *_previous;
+//    while (true) {
+//      if (_front == nullptr) {
+//        return optional();
+//      }
+//      _previous = _front->previous;
+//      if (front.compare_exchange_strong(_front, _front->previous)) {
+//        Node * __front = _front;
+//        if (!back.compare_exchange_strong(__front, nullptr)) {
+//          if (!front && !_previous) {
+//            front = _front->previous.load();
+//          }
+//        }
+//
+//        value = _front->value;
+//        delete _front;
+//        break;
+//      }
+//    }
+//
+//    return value;
+//  }
 };
 }
