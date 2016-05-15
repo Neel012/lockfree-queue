@@ -1,7 +1,8 @@
 #pragma once
 
-#include "queue.hpp"
 #include "epoch.hpp"
+#include "queue.hpp"
+#include "atomic_ptr.hpp"
 
 namespace lockfree {
 
@@ -16,6 +17,10 @@ struct epoch_queue : queue<T> {
     head_.store(new_node);
   }
 
+  bool empty() const noexcept {
+    return head_.load()->next == nullptr;
+  }
+
   void enqueue(value_type& value) final {
     enqueue_(new node(value));
   }
@@ -24,80 +29,57 @@ struct epoch_queue : queue<T> {
     enqueue_(new node(std::move(value)));
   }
 
-  optional dequeue() final {
-    optional value;
-    node* head;
-    epoch_guard<node> g{epoch_};
+  optional dequeue() noexcept final {
     while (true) {
-      head = head_.load();
+      epoch_guard g{epoch_};
+      node* head = head_.load();
       node* tail = tail_.load();
       node* next = head->next.load();
-      if (head == head_) {
-        if (head == tail) {
-          if (next == nullptr) {
-            return optional();
-          }
-          tail_.compare_exchange_weak(tail, next);
-        } else {
-          value = next->data;
-          if (head_.compare_exchange_weak(head, next)) {
-            g.unlink(head);
-            break;
-          }
+      if (head == tail) {
+        if (next == nullptr) {
+          return optional();
+        }
+        tail_.compare_exchange_weak(tail, next);
+      } else {
+        if (head_.compare_exchange_weak(head, next)) {
+          g.unlink(head);
+          return next->data;
         }
       }
     }
-    return value;
   }
 
 private:
   struct node {
     node() = default;
-
     node(value_type& d) : data(d) {}
-
     node(value_type&& d) : data(std::move(d)) {}
 
     /* data */
     value_type data;
-    std::atomic<node*> next{nullptr};
+    //std::atomic<node*> next{nullptr};
+    atomic_ptr<node> next{nullptr};
   };
-  //using pointer_type = node*;
 
-  void enqueue_(node* new_node) {
-    node* tail;
+  void enqueue_(node* new_node) noexcept {
     while (true) {
-      tail = tail_.load();
+      node* tail = tail_.load();
       node* next = tail->next.load();
-      if (tail == tail_) {
-        if (next == nullptr) {
-          if (tail_.compare_exchange_weak(tail, new_node)) {
-            break;
-          }
-        } else {
-          tail_.compare_exchange_weak(tail, next);
+      if (next == nullptr) {
+        if (tail->next.compare_exchange_weak(next, new_node)) {
+          tail_.compare_exchange_weak(tail, new_node);
+          return;
         }
+      } else {
+        tail_.compare_exchange_weak(tail, next);
       }
     }
-    tail_.compare_exchange_weak(tail, new_node);
   }
 
-  std::atomic<node*> head_;
+  /* data */
+  atomic_ptr<node> head_;
   std::atomic<node*> tail_;
-  epoch<node> epoch_;
+  epoch epoch_;
 };
 
-namespace tests {
-
-TEST_CASE("Epoch Queue - Basic tests - single thread") {
-  epoch_queue<int> q;
-  q.enqueue(1);
-  q.enqueue(2);
-  q.enqueue(3);
-  REQUIRE(*q.dequeue() == 1);
-  REQUIRE(*q.dequeue() == 2);
-  REQUIRE(*q.dequeue() == 3);
-}
-
-} // namespace tests
 } // namespace lockfree

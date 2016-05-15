@@ -3,7 +3,6 @@
 #include <atomic>
 #include "queue.hpp"
 #include "tagged_pointer.hpp"
-#include "tests/catch.hpp"
 
 namespace lockfree {
 
@@ -49,10 +48,6 @@ struct ms_queue : queue<T> {
     }
     delete head.ptr();
     return value;
-  }
-
-  ~ms_queue() {
-    while (dequeue()) { }
   }
 
 private:

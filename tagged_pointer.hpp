@@ -37,5 +37,4 @@ private:
   pointer_value value_;
 };
 
-
-}
+} // namespace lockfree
