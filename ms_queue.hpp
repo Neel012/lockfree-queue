@@ -17,6 +17,14 @@ struct ms_queue : queue<T> {
     head_.store(new_node);
   }
 
+  ~ms_queue() {
+    while (dequeue()) { }
+  }
+
+  bool empty() const noexcept {
+    return head_.load().ptr()->next.load().ptr() == nullptr;
+  }
+
   void enqueue(value_type& value) final {
     enqueue_(new node(value));
   }
@@ -48,10 +56,6 @@ struct ms_queue : queue<T> {
     }
     delete head.ptr();
     return value;
-  }
-
-  ~ms_queue() {
-    while (dequeue()) { }
   }
 
 private:
