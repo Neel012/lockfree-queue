@@ -89,6 +89,34 @@ TEST_CASE("any_ptr - Basic test") {
   }
 }
 
+TEST_CASE("any_ptr - vector") {
+  int counter{0};
+  SECTION("dtor") {
+    {
+      std::vector<any_ptr> data;
+      for (int i{0}; i < 20; i++) {
+        data.emplace_back(new test_counter{counter});
+      }
+      REQUIRE(counter == 20);
+    }
+    REQUIRE(counter == 0);
+  }
+  SECTION("move") {
+    {
+      std::vector<any_ptr> data;
+      for (int i{0}; i < 20; i++) {
+        data.emplace_back(new test_counter{counter});
+      }
+      REQUIRE(counter == 20);
+      std::vector<any_ptr> m{std::move(data)};
+      REQUIRE(counter == 20);
+      data.clear();
+      REQUIRE(counter == 20);
+    }
+    REQUIRE(counter == 0);
+  }
+}
+
 TEST_CASE("garbage - Basic test") {
   int counter{0};
   SECTION("One garbage clear") {
