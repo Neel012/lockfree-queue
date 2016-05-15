@@ -1,4 +1,5 @@
 #include "queue.hpp"
+#include <mutex>
 #include <queue>
 
 namespace lockfree {
