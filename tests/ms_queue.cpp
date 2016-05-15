@@ -1,11 +1,11 @@
-#include "../epoch_queue.hpp"
-#include "queue_tests.hpp"
+#include "../ms_queue.hpp"
 #include "catch.hpp"
+#include "queue_tests.hpp"
 
 namespace lockfree {
 
-TEST_CASE("epoch_queue - single thread") {
-  using queue_type = epoch_queue<int>;
+TEST_CASE("ms_queue - single thread") {
+  using queue_type = ms_queue<int>;
   SECTION("3 elements") {
     queue_type q;
     test_queue_basic(q, 3);
@@ -21,7 +21,7 @@ TEST_CASE("epoch_queue - single thread") {
 }
 
 TEST_CASE("ms_queue - two threads") {
-  using queue_type = epoch_queue<int>;
+  using queue_type = ms_queue<int>;
   SECTION("3 elements") {
     queue_type q;
     test_queue_t2(q, 3);

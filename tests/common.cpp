@@ -1,8 +1,10 @@
-#define CATCH_CONFIG_MAIN
-#include <vector>
-#include "../ms_queue.hpp"
-#include "../epoch_queue.hpp"
+#include "../any_ptr.hpp"
+#include "../atomic_ptr.hpp"
+#include "../epoch.hpp"
+#include "../garbage.hpp"
+#include "../tagged_pointer.hpp"
 #include "catch.hpp"
+#include <vector>
 
 namespace lockfree {
 
@@ -55,16 +57,6 @@ TEST_CASE("tagged_pointer - on heap") {
     REQUIRE(a == b);
   }
   delete i;
-}
-
-TEST_CASE("ms_queue - single thread") {
-  ms_queue<int> q;
-  q.enqueue(1);
-  q.enqueue(2);
-  q.enqueue(3);
-  REQUIRE(*q.dequeue() == 1);
-  REQUIRE(*q.dequeue() == 2);
-  REQUIRE(*q.dequeue() == 3);
 }
 
 TEST_CASE("any_ptr - Basic test") {
