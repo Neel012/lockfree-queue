@@ -17,11 +17,13 @@ struct epoch_queue : queue<T> {
     head_.store(new_node);
   }
 
-  // ~epoch_queue() noexcept final {
-  //   node* head = head_.load();
-  // node* tail = tail_.load();
-   // TODO: deallocate inserted nodes + dummy node
-  // }
+  ~epoch_queue() noexcept final {
+    tail_.release();
+  }
+
+  bool empty() const noexcept {
+    return head_.load()->next == nullptr;
+  }
 
   void enqueue(value_type& value) final {
     enqueue_(new node(value));
@@ -31,9 +33,9 @@ struct epoch_queue : queue<T> {
     enqueue_(new node(std::move(value)));
   }
 
-  optional dequeue() final {
+  optional dequeue() noexcept final {
     while (true) {
-      epoch_guard<node> g{epoch_};
+      epoch_guard g{epoch_};
       node* head = head_.load();
       node* tail = tail_.load();
       node* next = head->next.load();
@@ -62,14 +64,13 @@ private:
     //std::atomic<node*> next{nullptr};
     atomic_ptr<node> next{nullptr};
   };
-  //using pointer_type = node*;
 
-  void enqueue_(node* new_node) {
+  void enqueue_(node* new_node) noexcept {
     while (true) {
       node* tail = tail_.load();
       node* next = tail->next.load();
       if (next == nullptr) {
-        if (tail->next.compare_exchange_weak(tail, new_node)) {
+        if (tail->next.compare_exchange_weak(next, new_node)) {
           tail_.compare_exchange_weak(tail, new_node);
           return;
         }
@@ -79,11 +80,12 @@ private:
     }
   }
 
+  /* data */
   //std::atomic<node*> head_;
   //std::atomic<node*> tail_;
   atomic_ptr<node> head_;
   atomic_ptr<node> tail_;
-  epoch<node> epoch_;
+  epoch epoch_;
 };
 
 } // namespace lockfree

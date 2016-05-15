@@ -89,18 +89,23 @@ TEST_CASE("any_ptr - Basic test") {
   }
 }
 
+TEST_CASE("garbage - Basic test") {
+  int counter{0};
+  SECTION("One garbage clear") {
+    garbage l;
     for (int i{0}; i < 20; i++) {
       l.emplace_back(new test_counter{counter});
     }
     l.clear();
     REQUIRE(counter == 0);
   }
-  SECTION("Proper deallocation 2") {
+  SECTION("One garbage clear II") {
     std::vector<test_counter*> vec;
     for (int i{0}; i < 10; i++) {
       vec.push_back(new test_counter{counter});
     }
-    garbage_list<test_counter> l;
+    REQUIRE(counter == 10);
+    garbage l;
     for (int i{0}; i < 10; i++) {
       l.emplace_back(vec[i]);
     }
@@ -109,14 +114,14 @@ TEST_CASE("any_ptr - Basic test") {
   }
 }
 
-TEST_CASE("garbage - Basic test") {
+TEST_CASE("garbage_stack - Basic test") {
   int counter{0};
 
   SECTION("merge one list") {
-    garbage<test_counter> g;
+    garbage_stack g;
     constexpr unsigned n = 3;
     {
-      garbage_list<test_counter> l;
+      garbage l;
       for (unsigned i{0}; i < n; i++) {
         l.emplace_back(new test_counter{counter});
       }
@@ -128,13 +133,13 @@ TEST_CASE("garbage - Basic test") {
   }
 
   SECTION("Proper deallocation") {
-    garbage<test_counter> g;
+    garbage_stack g;
     {
-      garbage_list<test_counter> l;
+      garbage l;
       for (int i{0}; i < 20; i++) {
         l.emplace_back(new test_counter{counter});
       }
-      garbage_list<test_counter> m;
+      garbage m;
       for (int i{0}; i < 20; i++) {
         m.emplace_back(new test_counter{counter});
       }
@@ -149,12 +154,12 @@ TEST_CASE("garbage - Basic test") {
 TEST_CASE("Epoch - Basic test") {
   int counter{0};
   {
-    epoch<test_counter> e;
+    epoch e;
     std::vector<test_counter*> vec{
         new test_counter{counter}, new test_counter{counter},
         new test_counter{counter}, new test_counter{counter}};
     {
-      epoch_guard<test_counter> g{e};
+      epoch_guard g{e};
       for (auto& v : vec)
       {
         g.unlink(v);
