@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <thread>
-#include "../queue.h"
-#include "../ms_queue.h"
-#include "../mutex_queue.h"
+#include "../queue.hpp"
+#include "../ms_queue.hpp"
+#include "../mutex_queue.hpp"
 #include <iostream>
 #include <ctime>
 #include <unistd.h>

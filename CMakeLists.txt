@@ -7,7 +7,7 @@ project(lockfree-queue)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(enqueue_speed benchmarks/benchmarks.cpp)
+add_executable(benchmark benchmarks/benchmarks.cpp)
 
 add_executable(common
     tagged_pointer.hpp
