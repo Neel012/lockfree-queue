@@ -4,7 +4,6 @@
 #include <memory>
 #include <iostream>
 #include "atomic_ptr.hpp"
-#include "tests/catch.hpp"
 
 namespace lockfree {
 

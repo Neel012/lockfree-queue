@@ -3,7 +3,6 @@
 #include <atomic>
 #include "queue.hpp"
 #include "tagged_pointer.hpp"
-#include "tests/catch.hpp"
 
 namespace lockfree {
 

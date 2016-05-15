@@ -1,9 +1,8 @@
 #pragma once
 
-#include "queue.hpp"
 #include "epoch.hpp"
+#include "queue.hpp"
 #include "atomic_ptr.hpp"
-#include "tests/catch.hpp"
 
 namespace lockfree {
 
