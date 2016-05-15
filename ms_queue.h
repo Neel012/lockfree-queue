@@ -51,6 +51,10 @@ struct ms_queue : queue<T> {
     return value;
   }
 
+  ~ms_queue() {
+    while (dequeue()) { }
+  }
+
 private:
   struct node;
   using pointer_type = tagged_pointer<node>;
