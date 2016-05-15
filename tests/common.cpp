@@ -198,19 +198,4 @@ TEST_CASE("Epoch - Basic test") {
   REQUIRE(counter == 0);
 }
 
-TEST_CASE("epoch_queue - single thread") {
-  SECTION("3 elements") {
-    epoch_queue<int> q;
-    REQUIRE(q.empty());
-    q.enqueue(1);
-    q.enqueue(2);
-    q.enqueue(3);
-    REQUIRE(!q.empty());
-    REQUIRE(*q.dequeue() == 1);
-    REQUIRE(*q.dequeue() == 2);
-    REQUIRE(*q.dequeue() == 3);
-    REQUIRE(q.empty());
-  }
-}
-
 } // namespace lockfree
