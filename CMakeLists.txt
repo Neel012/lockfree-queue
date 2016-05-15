@@ -28,7 +28,3 @@ add_executable(epoch_queue
     tests/epoch_queue.cpp
 )
 
-add_executable(tagged_pointer
-    tagged_pointer.hpp
-    tests/tagged_pointer.cpp
-)
