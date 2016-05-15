@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <cassert>
+#include <array>
 #include "garbage_list.hpp"
 #include "tests/catch.hpp"
 

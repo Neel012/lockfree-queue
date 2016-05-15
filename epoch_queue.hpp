@@ -29,7 +29,7 @@ struct epoch_queue : queue<T> {
     node* head;
     epoch_guard<node> g{epoch_};
     while (true) {
-      node* head = head_.load();
+      head = head_.load();
       node* tail = tail_.load();
       node* next = head->next.load();
       if (head == head_) {
