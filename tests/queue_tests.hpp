@@ -6,6 +6,14 @@
 
 namespace lockfree {
 
+struct test_counter {
+  test_counter(int& i) : n{i} { n++; }
+
+  ~test_counter() { n--; }
+
+  int& n;
+};
+
 template <template <typename> class Q>
 void test_queue_basic(Q<int>& q, size_t count) {
   REQUIRE(q.empty());
@@ -17,6 +25,27 @@ void test_queue_basic(Q<int>& q, size_t count) {
     REQUIRE(*q.dequeue() == i + 1);
   }
   REQUIRE(q.empty());
+}
+
+template <template <typename> class Q>
+void test_queue_basic2(Q<int>& q, size_t count) {
+  REQUIRE(q.empty());
+  for (size_t i{0}; i < count; i++) {
+    std::async([&] {
+      q.enqueue(1);
+      q.dequeue();
+    });
+  }
+  REQUIRE(q.empty());
+}
+
+template <template <typename> class Q>
+void test_only_enqueue(Q<int>& q, size_t count) {
+  REQUIRE(q.empty());
+  for (size_t i{0}; i < count; i++) {
+    q.enqueue(i + 1);
+  }
+  REQUIRE(!q.empty());
 }
 
 template <typename Q>
