@@ -2,6 +2,8 @@
 #include <thread>
 #include "../queue.hpp"
 #include "../ms_queue.hpp"
+#include "../my_queue.hpp"
+#include "../epoch_queue.hpp"
 #include "../mutex_queue.hpp"
 #include <iostream>
 #include <ctime>
@@ -26,7 +28,8 @@ struct BaseBenchmark {
     volatile bool wait = true;
     int size_per_thread = size / threads_count;
 
-    prepare_fn(queue, size_per_thread);
+    for (int i = 0; i < threads_count; ++i)
+      prepare_fn(queue, size_per_thread);
 
 
     auto bnchm = [&] {
@@ -104,9 +107,9 @@ struct EnqueueBenchmark : public BaseBenchmark<Queue> {
 };
 
 template<typename Queue>
-struct EndequeueBenchmark : public BaseBenchmark<Queue> {
+struct EndequeueLowBenchmark : public BaseBenchmark<Queue> {
 
-  EndequeueBenchmark(int size, int threads_count, int num_of_runs, bool autorun = false) :
+  EndequeueLowBenchmark(int size, int threads_count, int num_of_runs, bool autorun = false) :
       BaseBenchmark<Queue>(size, threads_count, num_of_runs) {
     if (autorun) this->run();
   }
@@ -122,13 +125,49 @@ struct EndequeueBenchmark : public BaseBenchmark<Queue> {
 
 };
 
+template<typename Queue>
+struct EndequeueHighBenchmark : public BaseBenchmark<Queue> {
+
+  EndequeueHighBenchmark(int size, int threads_count, int num_of_runs, bool autorun = false) :
+      BaseBenchmark<Queue>(size, threads_count, num_of_runs) {
+    if (autorun) this->run();
+  }
+
+  virtual void prepare_fn(Queue &queue, int size) {
+    for (int i = 0; i < size; ++i) queue.enqueue(0);
+  }
+
+  virtual void benchmark_fn(Queue &queue, int size) {
+    for (int i = 0; i < size; ++i) {
+      queue.enqueue(0);
+      queue.dequeue();
+    }
+  }
+
+};
+
 
 int main() {
+
+
   for (int i = 1; i < 8; i = i << 1) EnqueueBenchmark<lockfree::mutex_queue<int>>(10000000, i, 5, true);
+  for (int i = 1; i < 8; i = i << 1) EnqueueBenchmark<lockfree::my_queue<int>>(10000000, i, 5, true);
   for (int i = 1; i < 8; i = i << 1) EnqueueBenchmark<lockfree::ms_queue<int>>(10000000, i, 5, true);
+//  for (int i = 1; i < 8; i = i << 1) EnqueueBenchmark<lockfree::epoch_queue<int>>(10000000, i, 5, true);
 
   for (int i = 1; i < 8; i = i << 1) DequeueBenchmark<lockfree::mutex_queue<int>>(10000000, i, 5, true);
+  for (int i = 1; i < 8; i = i << 1) DequeueBenchmark<lockfree::my_queue<int>>(10000000, i, 5, true);
   for (int i = 1; i < 8; i = i << 1) DequeueBenchmark<lockfree::ms_queue<int>>(10000000, i, 5, true);
-
-
+//  for (int i = 1; i < 8; i = i << 1) DequeueBenchmark<lockfree::epoch_queue<int>>(10000000, i, 5, true);
+//
+  for (int i = 1; i < 8; i = i << 1) EndequeueHighBenchmark<lockfree::mutex_queue<int>>(10000000, i, 5, true);
+  for (int i = 1; i < 8; i = i << 1) EndequeueHighBenchmark<lockfree::my_queue<int>>(10000000, i, 5, true);
+  for (int i = 1; i < 8; i = i << 1) EndequeueHighBenchmark<lockfree::ms_queue<int>>(10000000, i, 5, true);
+//  for (int i = 1; i < 8; i = i << 1) EndequeueHighBenchmark<lockfree::epoch_queue<int>>(10000000, i, 5, true);
+//
+  for (int i = 1; i < 8; i = i << 1) EndequeueLowBenchmark<lockfree::mutex_queue<int>>(10000000, i, 5, true);
+  for (int i = 1; i < 8; i = i << 1) EndequeueLowBenchmark<lockfree::my_queue<int>>(10000000, i, 5, true);
+  for (int i = 1; i < 8; i = i << 1) EndequeueLowBenchmark<lockfree::ms_queue<int>>(10000000, i, 5, true);
+//  for (int i = 1; i < 8; i = i << 1) EndequeueLowBenchmark<lockfree::epoch_queue<int>>(10000000, i, 5, true);
+//  EndequeueLowBenchmark<lockfree::my_queue<int>>(10000000, 2, 5, true);
 }
