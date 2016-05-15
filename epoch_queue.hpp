@@ -17,10 +17,6 @@ struct epoch_queue : queue<T> {
     head_.store(new_node);
   }
 
-  ~epoch_queue() noexcept final {
-    tail_.release();
-  }
-
   bool empty() const noexcept {
     return head_.load()->next == nullptr;
   }
@@ -81,10 +77,8 @@ private:
   }
 
   /* data */
-  //std::atomic<node*> head_;
-  //std::atomic<node*> tail_;
   atomic_ptr<node> head_;
-  atomic_ptr<node> tail_;
+  std::atomic<node*> tail_;
   epoch epoch_;
 };
 
