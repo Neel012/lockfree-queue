@@ -57,7 +57,6 @@ private:
 
     /* data */
     value_type data;
-    //std::atomic<node*> next{nullptr};
     atomic_ptr<node> next{nullptr};
   };
 

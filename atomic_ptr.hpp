@@ -19,12 +19,12 @@ struct atomic_ptr {
     return load() == rhs.load();
   }
 
-  pointer_type operator->() const {
-    return pointer_.load();
-  }
-
   bool operator==(std::nullptr_t) {
     return load() == nullptr;
+  }
+
+  pointer_type operator->() const {
+    return pointer_.load();
   }
 
   void reset() {
