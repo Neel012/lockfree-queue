@@ -80,6 +80,10 @@ TEST_CASE("epoch_queue - 3 threads") {
     queue_type q;
     test_queue_t3(q, 1000);
   }
+  SECTION(">100 000 elements") {
+    queue_type q;
+    test_queue_t3(q, 120000);
+  }
 }
 
 }
