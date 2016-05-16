@@ -35,7 +35,7 @@ struct atomic_ptr {
   }
 
   void release() {
-    pointer_ = nullptr;
+    pointer_.store(nullptr);
   }
 
   pointer_type load(
