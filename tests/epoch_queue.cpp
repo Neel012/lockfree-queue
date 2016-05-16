@@ -18,9 +18,9 @@ TEST_CASE("epoch_queue - single thread") {
     queue_type q;
     test_queue_basic(q, 1000);
   }
-  SECTION(">100 000 elements") {
+  SECTION("10 000 elements") {
     queue_type q;
-    test_queue_basic(q, 200000);
+    test_queue_basic(q, 10000);
   }
 }
 
@@ -84,9 +84,9 @@ TEST_CASE("epoch_queue - 3 threads") {
     queue_type q;
     test_queue_t3(q, 1000);
   }
-  SECTION(">100 000 elements") {
+  SECTION("12 000 elements") {
     queue_type q;
-    test_queue_t3(q, 120000);
+    test_queue_t3(q, 12000);
   }
 }
 
