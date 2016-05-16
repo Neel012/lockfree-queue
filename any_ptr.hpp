@@ -13,10 +13,7 @@ struct any_ptr {
   template <typename E>
   struct default_delete {
     void operator()(void* ptr) {
-      //delete static_cast<E*>(ptr);
-      E* e = static_cast<E*>(ptr);
-      e->next.release();
-      delete e;
+      delete static_cast<E*>(ptr);
     }
   };
 
