@@ -1,0 +1,13 @@
+name: 16EnqueueBenchmarkIN8lockfree8my_queueIiEEE	threads: 1	time: 0.631825
+name: 16EnqueueBenchmarkIN8lockfree8my_queueIiEEE	threads: 2	time: 1.43679
+name: 16EnqueueBenchmarkIN8lockfree8my_queueIiEEE	threads: 4	time: 1.31668
+name: 16DequeueBenchmarkIN8lockfree8my_queueIiEEE	threads: 1	time: 0.976445
+name: 16DequeueBenchmarkIN8lockfree8my_queueIiEEE	threads: 2	time: 0.966573
+name: 16DequeueBenchmarkIN8lockfree8my_queueIiEEE	threads: 4	time: 0.809953
+name: 22EndequeueHighBenchmarkIN8lockfree8my_queueIiEEE	threads: 1	time: 1.69172
+name: 22EndequeueHighBenchmarkIN8lockfree8my_queueIiEEE	threads: 2	time: 3.87983
+name: 22EndequeueHighBenchmarkIN8lockfree8my_queueIiEEE	threads: 4	time: 3.25856
+name: 21EndequeueLowBenchmarkIN8lockfree8my_queueIiEEE	threads: 1	time: 0.911061
+name: 21EndequeueLowBenchmarkIN8lockfree8my_queueIiEEE	threads: 2	time: 4.41145
+name: 21EndequeueLowBenchmarkIN8lockfree8my_queueIiEEE	threads: 4	time: 3.7684
+

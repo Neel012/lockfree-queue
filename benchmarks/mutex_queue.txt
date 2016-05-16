@@ -1,0 +1,13 @@
+name: 16EnqueueBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 1	time: 0.275365
+name: 16EnqueueBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 2	time: 1.51253
+name: 16EnqueueBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 4	time: 3.86462
+name: 16DequeueBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 1	time: 0.232159
+name: 16DequeueBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 2	time: 1.50584
+name: 16DequeueBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 4	time: 2.94289
+name: 22EndequeueHighBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 1	time: 0.529748
+name: 22EndequeueHighBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 2	time: 3.40437
+name: 22EndequeueHighBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 4	time: 7.67389
+name: 21EndequeueLowBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 1	time: 0.468437
+name: 21EndequeueLowBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 2	time: 3.36219
+name: 21EndequeueLowBenchmarkIN8lockfree11mutex_queueIiEEE	threads: 4	time: 8.14507
+
