@@ -46,7 +46,7 @@ TEST_CASE("ms_queue - basic async") {
   }
   SECTION("1000 elements") {
     queue_type q;
-    test_queue_basic2(q, 100000);
+    test_queue_basic2(q, 1000);
   }
 }
 
@@ -63,6 +63,22 @@ TEST_CASE("ms_queue - two threads") {
   SECTION("1000 elements") {
     queue_type q;
     test_queue_t2(q, 1000);
+  }
+}
+
+TEST_CASE("epoch_queue - 3 threads") {
+  using queue_type = epoch_queue<int>;
+  SECTION("3 elements") {
+    queue_type q;
+    test_queue_t3(q, 3);
+  }
+  SECTION("100 elements") {
+    queue_type q;
+    test_queue_t3(q, 100);
+  }
+  SECTION("1000 elements") {
+    queue_type q;
+    test_queue_t3(q, 1000);
   }
 }
 
