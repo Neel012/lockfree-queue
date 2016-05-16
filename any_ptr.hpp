@@ -25,10 +25,6 @@ struct any_ptr {
     rhs.pointer_ = nullptr;
   }
 
-  // any_ptr(pointer_type pointer, std::function<deleter_type>&& deleter) noexcept
-  //     : pointer_{pointer}, deleter_{std::move(deleter)}
-  // { }
-
   template <typename E>
   any_ptr(
       E* pointer,
@@ -68,9 +64,3 @@ private:
   std::function<deleter_type> deleter_;
 };
 
-// template <typename E>
-// any_ptr make_any_ptr(E* ptr, std::function<any_ptr::deleter_type>&& deleter =
-//                                  any_ptr::default_delete<E>{}) noexcept
-// {
-//   return any_ptr{ptr, std::move(deleter)};
-// }

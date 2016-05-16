@@ -36,7 +36,6 @@ private:
   std::atomic<unsigned> global_epoch_{1};
   std::array<std::atomic<unsigned>, epoch_count> active_;
   std::array<garbage_stack, epoch_count> unlinked_;
-  // static thread_local std::array<garbage, epoch_count> local_unlinked;
 };
 
 struct epoch_guard {
@@ -63,8 +62,6 @@ struct epoch_guard {
   }
 
   void unpin() noexcept {
-    // fixme: leaking some memory at the end of a lifetime of the epoch object
-    // ... deallocation takes place at the begining of the guarded operation
     e_.merge_garbage(std::move(local_unlinked_), guard_epoch_);
     e_.active_[guard_epoch_ % epoch_count]--;
     unpinned_ = true;

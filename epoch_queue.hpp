@@ -42,7 +42,7 @@ struct epoch_queue : queue<T> {
         tail_.compare_exchange_weak(tail, next);
       } else {
         if (head_.compare_exchange_weak(head, next)) {
-          // fixme: verify that i can modify the node->next?
+          // fixme: verify that i can modify the node->next
           head->next.release();
           g.unlink(head);
           return next->data;
