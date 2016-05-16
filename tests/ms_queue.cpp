@@ -18,6 +18,10 @@ TEST_CASE("ms_queue - single thread") {
     queue_type q;
     test_queue_basic(q, 1000);
   }
+  SECTION(">100 000 elements") {
+    queue_type q;
+    test_queue_basic(q, 1000000);
+  }
 }
 
 TEST_CASE("ms_queue - only enqueue") {
@@ -81,6 +85,10 @@ TEST_CASE("ms_queue - 3 threads") {
   SECTION("1000 elements") {
     queue_type q;
     test_queue_t3(q, 1000);
+  }
+  SECTION(">100 000 elements") {
+    queue_type q;
+    test_queue_t3(q, 200000);
   }
 }
 

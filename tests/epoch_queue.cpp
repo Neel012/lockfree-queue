@@ -18,6 +18,10 @@ TEST_CASE("epoch_queue - single thread") {
     queue_type q;
     test_queue_basic(q, 1000);
   }
+  SECTION(">100 000 elements") {
+    queue_type q;
+    test_queue_basic(q, 200000);
+  }
 }
 
 TEST_CASE("epoch_queue - only enqueue") {
