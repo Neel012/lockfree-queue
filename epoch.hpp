@@ -17,6 +17,7 @@ private:
   friend epoch_guard;
 
   void free_epoch(unsigned n) noexcept {
+    assert(active_[n % epoch_count].load() == 0);
     unlinked_[n % epoch_count].clear();
   }
 
