@@ -17,6 +17,15 @@ struct epoch_queue : queue<T> {
     head_.store(new_node);
   }
 
+  ~epoch_queue() noexcept {
+    node* n = head_.load();
+    while (n != nullptr) {
+      node* d = n;
+      n = n->next.load();
+      delete d;
+    }
+  }
+
   bool empty() const noexcept {
     return head_.load()->next == nullptr;
   }
@@ -42,7 +51,6 @@ struct epoch_queue : queue<T> {
         tail_.compare_exchange_weak(tail, next);
       } else {
         if (head_.compare_exchange_weak(head, next)) {
-          head->next.release();
           g.unlink(head);
           return next->data;
         }
@@ -58,7 +66,7 @@ private:
 
     /* data */
     value_type data;
-    atomic_ptr<node> next{nullptr};
+    std::atomic<node*> next{nullptr};
   };
 
   void enqueue_(node* new_node) noexcept {
@@ -77,7 +85,7 @@ private:
   }
 
   /* data */
-  atomic_ptr<node> head_;
+  std::atomic<node*> head_;
   std::atomic<node*> tail_;
   epoch epoch_;
 };

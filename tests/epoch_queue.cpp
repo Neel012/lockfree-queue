@@ -22,6 +22,14 @@ TEST_CASE("epoch_queue - single thread") {
     queue_type q;
     test_queue_basic(q, 10000);
   }
+  SECTION("100 000 elements") {
+    queue_type q;
+    test_queue_basic(q, 100'000);
+  }
+  SECTION("1 000 000 elements") {
+    queue_type q;
+    test_queue_basic(q, 1'000'000);
+  }
 }
 
 TEST_CASE("epoch_queue - only enqueue") {
@@ -84,9 +92,13 @@ TEST_CASE("epoch_queue - 3 threads") {
     queue_type q;
     test_queue_t3(q, 1000);
   }
-  SECTION("12 000 elements") {
+  SECTION("100 000 elements") {
     queue_type q;
-    test_queue_t3(q, 12000);
+    test_queue_t3(q, 100'000);
+  }
+  SECTION("1 200 000 elements") {
+    queue_type q;
+    test_queue_t3(q, 1'200'000);
   }
 }
 
