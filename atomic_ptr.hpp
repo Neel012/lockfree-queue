@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <utility>
+namespace lockfree {
 
 template <typename T>
 struct atomic_ptr {
@@ -9,33 +10,35 @@ struct atomic_ptr {
 
   atomic_ptr() = default;
 
-  atomic_ptr(pointer_type pointer) : pointer_{pointer} {}
+  explicit atomic_ptr(pointer_type pointer) noexcept : pointer_{pointer}
+  { }
 
-  ~atomic_ptr() {
+  ~atomic_ptr() noexcept {
     reset();
   }
 
-  bool operator==(atomic_ptr& rhs) {
+  bool operator==(atomic_ptr& rhs) noexcept {
     return load() == rhs.load();
   }
 
-  bool operator==(std::nullptr_t) {
+  bool operator==(std::nullptr_t) noexcept {
     return load() == nullptr;
   }
 
-  pointer_type operator->() const {
+  pointer_type operator->() const noexcept {
     return pointer_.load();
   }
 
-  void reset() {
+  void reset() noexcept {
     if (pointer_ != nullptr) {
       delete pointer_;
       pointer_ = nullptr;
     }
   }
 
-  void release() {
-    pointer_.store(nullptr);
+  pointer_type release() noexcept {
+    pointer_type ptr = pointer_.exchange(nullptr);
+    return ptr;
   }
 
   pointer_type load(
@@ -46,7 +49,7 @@ struct atomic_ptr {
 
   void store(
       pointer_type& desired,
-      std::memory_order order = std::memory_order_seq_cst)
+      std::memory_order order = std::memory_order_seq_cst) noexcept
   {
     pointer_.store(desired, order);
   }
@@ -54,7 +57,7 @@ struct atomic_ptr {
   bool compare_exchange_weak(
       pointer_type expected,
       pointer_type desired,
-      std::memory_order order = std::memory_order_seq_cst) volatile
+      std::memory_order order = std::memory_order_seq_cst) volatile noexcept
   {
     return pointer_.compare_exchange_weak(expected, desired, order);
   }
@@ -68,3 +71,4 @@ atomic_ptr<T> make_atomic_ptr(Args&&... args) {
   return atomic_ptr<T>(new T{std::forward<Args>(args)...});
 }
 
+} // namespace lockfree
