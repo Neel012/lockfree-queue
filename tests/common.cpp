@@ -171,6 +171,38 @@ TEST_CASE("garbage_stack - Basic test") {
   }
 }
 
+void test_garbage_stack(size_t stack_count) {
+  int counter{0};
+  garbage_stack g;
+  {
+    size_t sum{0};
+    for (size_t i{0}; i < stack_count; ++i) {
+      REQUIRE(counter == sum);
+      garbage l;
+      for (int j{0}; j < 5; j++) {
+        l.emplace_back(new test_counter{counter});
+        sum++;
+      }
+      g.merge(l);
+    }
+  }
+  // REQUIRE(g.count_nodes() == stack_count);
+  g.clear();
+  REQUIRE(counter == 0);
+}
+
+TEST_CASE("garbage_stack - Big stack") {
+  SECTION("40 000 nodes") {
+    test_garbage_stack(40000);
+  }
+  SECTION("60 000 nodes") {
+    test_garbage_stack(60'000);
+  }
+  SECTION("140 000 nodes") {
+    test_garbage_stack(140'000);
+  }
+}
+
 TEST_CASE("Epoch - Basic test") {
   int counter{0};
   {

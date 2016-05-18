@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <memory>
 #include <iostream>
 #include <vector>
@@ -34,15 +35,24 @@ struct garbage {
 private:
   friend garbage_stack;
   std::vector<any_ptr> data;
-  std::unique_ptr<garbage> next{nullptr};
+  garbage* next{nullptr};
 };
 
 // Global garbage_stack is used to store managed pointers and is accessed
 // concurrently. 
 struct garbage_stack {
 
-  void clear() {
-    head_.reset();
+  ~garbage_stack() noexcept {
+    clear();
+  }
+
+  void clear() noexcept {
+    garbage* node = head_.release();
+    while (node != nullptr) {
+      garbage* d = node;
+      node = node->next;
+      delete d;
+    }
   }
 
   void merge(garbage& g) {
@@ -50,13 +60,13 @@ struct garbage_stack {
       return;
     }
     auto* new_node = new garbage{std::move(g)};
+    assert(new_node->next == nullptr);
     while (true) {
       garbage* head = head_.load();
-      new_node->next.reset(head);
+      new_node->next = head;
       if (head_.compare_exchange_weak(head, new_node)) {
         break;
       }
-      new_node->next.release();
     }
   }
 
