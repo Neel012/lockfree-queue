@@ -4,6 +4,7 @@
 #include "queue.hpp"
 #include <iostream>
 #include <unistd.h>
+
 namespace lockfree {
 
 template<typename T>
@@ -13,11 +14,12 @@ struct my_queue : queue<T> {
 
   struct Node {
     Node(value_type &d) : value(d) { }
+
     Node(value_type &&d) : value(std::move(d)) { }
 
     /* data */
     value_type value;
-    volatile Node * previous{nullptr};
+    volatile Node *previous{nullptr};
   };
 
   std::atomic<volatile Node *> back{nullptr};
@@ -37,7 +39,7 @@ struct my_queue : queue<T> {
   }
 
   bool empty() {
-    return front == nullptr;
+    return front == nullptr and back == nullptr;
   }
 
   void enqueue_(Node *node) {
@@ -51,22 +53,29 @@ struct my_queue : queue<T> {
 
 //  mene lock-free verze, ale funguje na 100%.
   optional dequeue() {
-    volatile Node *old_front = front.exchange(nullptr);
-    if (!old_front) {
-      return optional();
-    }
-    volatile Node * _front = old_front;
-    if (!back.compare_exchange_strong(_front, nullptr)) {
-      while (true) {
-        _front = old_front->previous;
-        if (_front) break;
-      }
-      front = _front;
-    }
+    volatile Node *old_front;
+    volatile Node *_front;
+    while (!empty()) {
 
-    optional value = static_cast<int>(old_front->value);
-    delete old_front;
-    return value;
+      old_front = front.exchange(nullptr);
+      if (!old_front) {
+        continue;
+      }
+
+      _front = old_front;
+      if (!back.compare_exchange_strong(_front, nullptr)) {
+        while (true) {
+          _front = old_front->previous;
+          if (_front) break;
+        }
+        front = _front;
+      }
+
+      optional value = static_cast<int>(old_front->value);
+      delete old_front;
+      return value;
+    }
+    return optional();
   }
 // //  vice lock-free verze, ale funguje na 80% (někdy, v jednom benchmarku spadne, ale.. skoro bez chyby)
 //  optional dequeue() {
