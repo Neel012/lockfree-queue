@@ -102,4 +102,4 @@ TEST_CASE("epoch_queue - 3 threads") {
   }
 }
 
-}
+} // namespace lockfree
