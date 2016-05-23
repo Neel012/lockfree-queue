@@ -26,7 +26,7 @@ struct any_ptr {
   }
 
   template <typename E>
-  any_ptr(
+  explicit any_ptr(
       E* pointer,
       std::function<deleter_type>&& deleter = default_delete<E>{}) noexcept
       : pointer_{pointer}, deleter_{std::move(deleter)}
