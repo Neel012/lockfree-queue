@@ -47,8 +47,15 @@ add_executable(epoch_queue
     tests/epoch_queue.cpp
 )
 
+add_executable(my_queue
+    tests/main.cpp
+    tests/queue_tests.hpp
+    tests/my_queue.cpp
+)
  
 target_link_libraries(benchmark ${CMAKE_THREAD_LIBS_INIT} )
 target_link_libraries(common ${CMAKE_THREAD_LIBS_INIT} )
 target_link_libraries(ms_queue ${CMAKE_THREAD_LIBS_INIT} )
 target_link_libraries(epoch_queue ${CMAKE_THREAD_LIBS_INIT} )
+target_link_libraries(my_queue ${CMAKE_THREAD_LIBS_INIT} )
+
