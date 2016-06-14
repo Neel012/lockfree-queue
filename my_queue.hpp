@@ -1,14 +1,14 @@
 #pragma once
 
 #include <atomic>
-#include "queue.hpp"
+#include <experimental/optional>
 #include <iostream>
 #include <unistd.h>
 
 namespace lockfree {
 
 template<typename T>
-struct my_queue : queue<T> {
+struct my_queue {
   using value_type = T;
   using optional = std::experimental::optional<value_type>;
 
@@ -26,11 +26,11 @@ struct my_queue : queue<T> {
   std::atomic<volatile Node *> front{nullptr};
 
 
-  void enqueue(value_type &value) final {
+  void enqueue(value_type &value) noexcept {
     enqueue_(new Node(value));
   }
 
-  void enqueue(value_type &&value) final {
+  void enqueue(value_type &&value) noexcept {
     enqueue_(new Node(std::move(value)));
   }
 
@@ -38,11 +38,11 @@ struct my_queue : queue<T> {
     while (dequeue()) { }
   }
 
-  bool empty() {
+  bool empty() const noexcept {
     return front == nullptr and back == nullptr;
   }
 
-  void enqueue_(Node *node) {
+  void enqueue_(Node *node) noexcept {
     volatile Node *old_back = back.exchange(node);
     if (old_back == nullptr) {
       front = node;
@@ -52,7 +52,7 @@ struct my_queue : queue<T> {
   }
 
 //  mene lock-free verze, ale funguje na 100%.
-  optional dequeue() {
+  optional dequeue() noexcept {
     volatile Node *old_front;
     volatile Node *_front;
     while (!empty()) {

@@ -1,13 +1,13 @@
 #pragma once
 
 #include <atomic>
-#include "queue.hpp"
+#include <experimental/optional>
 #include "tagged_pointer.hpp"
 
 namespace lockfree {
 
 template <typename T>
-struct ms_queue : queue<T> {
+struct ms_queue {
   using value_type = T;
   using optional = std::experimental::optional<value_type>;
 
@@ -25,15 +25,15 @@ struct ms_queue : queue<T> {
     return head_.load().ptr()->next.load().ptr() == nullptr;
   }
 
-  void enqueue(value_type& value) final {
+  void enqueue(value_type& value) noexcept {
     enqueue_(new node(value));
   }
 
-  void enqueue(value_type&& value) final {
+  void enqueue(value_type&& value) noexcept {
     enqueue_(new node(std::move(value)));
   }
 
-  optional dequeue() final {
+  optional dequeue() noexcept {
     optional value;
     pointer_type head;
     while (true) {
@@ -72,7 +72,7 @@ private:
     std::atomic<pointer_type> next{nullptr};
   };
 
-  void enqueue_(node* new_node) {
+  void enqueue_(node* new_node) noexcept {
     pointer_type tail;
     while (true) {
       tail = tail_.load();

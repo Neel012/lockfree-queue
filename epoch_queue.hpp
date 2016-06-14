@@ -1,13 +1,12 @@
 #pragma once
 
 #include "epoch.hpp"
-#include "queue.hpp"
-#include "atomic_ptr.hpp"
+#include <experimental/optional>
 
 namespace lockfree {
 
 template <typename T>
-struct epoch_queue : queue<T> {
+struct epoch_queue {
   using value_type = T;
   using optional = std::experimental::optional<value_type>;
 
@@ -30,15 +29,15 @@ struct epoch_queue : queue<T> {
     return head_.load()->next == nullptr;
   }
 
-  void enqueue(value_type& value) final {
+  void enqueue(value_type& value) noexcept {
     enqueue_(new node(value));
   }
 
-  void enqueue(value_type&& value) final {
+  void enqueue(value_type&& value) noexcept {
     enqueue_(new node(std::move(value)));
   }
 
-  optional dequeue() noexcept final {
+  optional dequeue() noexcept {
     while (true) {
       epoch_guard g{epoch_};
       node* head = head_.load();

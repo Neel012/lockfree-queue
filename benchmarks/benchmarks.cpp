@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <thread>
-#include "../queue.hpp"
 #include "../ms_queue.hpp"
 #include "../my_queue.hpp"
 #include "../epoch_queue.hpp"
