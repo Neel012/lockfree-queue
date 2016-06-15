@@ -1,13 +1,11 @@
 #include <assert.h>
+#include <chrono>
 #include <thread>
 #include "../ms_queue.hpp"
 #include "../my_queue.hpp"
 #include "../epoch_queue.hpp"
 #include "../mutex_queue.hpp"
 #include <iostream>
-#include <ctime>
-#include <unistd.h>
-
 
 template<typename Queue>
 struct BaseBenchmark {
@@ -40,7 +38,7 @@ struct BaseBenchmark {
       threads.push_back(std::thread(bnchm));
 
 
-    usleep(10000);
+    std::this_thread::sleep_for(std::chrono::microseconds(10000));
     auto start = std::chrono::system_clock::now();
     wait = false;
 
@@ -56,7 +54,7 @@ struct BaseBenchmark {
     double sum = 0;
     for (int i = 0; i < num_of_runs; ++i) {
       sum += one_run();
-      usleep(10000);
+      std::this_thread::sleep_for(std::chrono::microseconds(10000));
     }
     std::cout <<
     "name: " << typeid(*this).name() <<
