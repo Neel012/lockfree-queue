@@ -1,4 +1,4 @@
-#include "../my_queue.hpp"
+#include <my_queue.hpp>
 #include "catch.hpp"
 #include "queue_tests.hpp"
 

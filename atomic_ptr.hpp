@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <utility>
+
 namespace lockfree {
 
 template <typename T>

@@ -3,7 +3,8 @@
 #include <atomic>
 #include <cassert>
 #include <array>
-#include "garbage.hpp"
+
+#include <garbage.hpp>
 
 namespace lockfree {
 

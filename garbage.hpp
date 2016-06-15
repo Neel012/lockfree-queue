@@ -2,11 +2,12 @@
 
 #include <atomic>
 #include <cassert>
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <vector>
-#include "atomic_ptr.hpp"
-#include "any_ptr.hpp"
+
+#include <any_ptr.hpp>
+#include <atomic_ptr.hpp>
 
 namespace lockfree {
 

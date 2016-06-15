@@ -2,7 +2,8 @@
 
 #include <atomic>
 #include <experimental/optional>
-#include "tagged_pointer.hpp"
+
+#include <tagged_pointer.hpp>
 
 namespace lockfree {
 

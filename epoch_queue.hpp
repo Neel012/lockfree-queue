@@ -1,7 +1,8 @@
 #pragma once
 
-#include "epoch.hpp"
 #include <experimental/optional>
+
+#include <epoch.hpp>
 
 namespace lockfree {
 

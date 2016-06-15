@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <chrono>
 #include <thread>
-#include "../ms_queue.hpp"
-#include "../my_queue.hpp"
-#include "../epoch_queue.hpp"
-#include "../mutex_queue.hpp"
+#include <ms_queue.hpp>
+#include <my_queue.hpp>
+#include <epoch_queue.hpp>
+#include <mutex_queue.hpp>
 #include <iostream>
 
 template<typename Queue>

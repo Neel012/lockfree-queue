@@ -1,4 +1,4 @@
-#include "../epoch_queue.hpp"
+#include <epoch_queue.hpp>
 #include "queue_tests.hpp"
 #include "catch.hpp"
 

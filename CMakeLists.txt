@@ -10,6 +10,10 @@ find_package(Threads)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++14 -stdlib=libc++ -Wall -Wextra -Weffc++ -O0")
 #  -Wold-style-cast -Werror
 
+include_directories(
+    ${CMAKE_CURRENT_LIST_DIR}
+    )
+
 add_executable(benchmark
   ms_queue.hpp
   epoch_queue.hpp

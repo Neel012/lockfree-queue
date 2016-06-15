@@ -1,8 +1,8 @@
-#include "../any_ptr.hpp"
-#include "../atomic_ptr.hpp"
-#include "../epoch.hpp"
-#include "../garbage.hpp"
-#include "../tagged_pointer.hpp"
+#include <any_ptr.hpp>
+#include <atomic_ptr.hpp>
+#include <epoch.hpp>
+#include <garbage.hpp>
+#include <tagged_pointer.hpp>
 #include "catch.hpp"
 #include <vector>
 
