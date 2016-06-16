@@ -143,39 +143,43 @@ struct EndequeueHighBenchmark : public BaseBenchmark<Queue> {
 
 };
 
+void help(char name[]) {
+  std::cout << "Usage: " << name << " <queue type | --help>\n";
+  std::cout << "queue types: mutex_queue, my_queue, ms_queue, epoch_queue\n";
+  std::cout << "--help: show this help\n\n";
+}
 
-// 1 - mutex_queue
-// 2 - my_queue
-// 3 - ms_queue 
-// 4 - epoch_queue
 int main(int argc, char* argv[]) {
   int size = 10000000;
   int number_of_runs = 10;
-  switch (atoi(argv[1])) {
-    case 1:
-      for (int threads = 1; threads <= 8; ++threads) EnqueueBenchmark<lockfree::mutex_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) DequeueBenchmark<lockfree::mutex_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) EndequeueHighBenchmark<lockfree::mutex_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) EndequeueLowBenchmark<lockfree::mutex_queue<int>>(size, threads, number_of_runs, true);
-      break;
-    case 2:
-      for (int threads = 1; threads <= 8; ++threads) EnqueueBenchmark<lockfree::my_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) DequeueBenchmark<lockfree::my_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) EndequeueHighBenchmark<lockfree::my_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) EndequeueLowBenchmark<lockfree::my_queue<int>>(size, threads, number_of_runs, true);
-      break;
-    case 3:
-      for (int threads = 1; threads <= 8; ++threads) EnqueueBenchmark<lockfree::ms_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) DequeueBenchmark<lockfree::ms_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) EndequeueHighBenchmark<lockfree::ms_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) EndequeueLowBenchmark<lockfree::ms_queue<int>>(size, threads, number_of_runs, true);
-      break;
-    case 4:
-      for (int threads = 1; threads <= 8; ++threads) EnqueueBenchmark<lockfree::epoch_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) DequeueBenchmark<lockfree::epoch_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) EndequeueHighBenchmark<lockfree::epoch_queue<int>>(size, threads, number_of_runs, true);
-      for (int threads = 1; threads <= 8; ++threads) EndequeueLowBenchmark<lockfree::epoch_queue<int>>(size, threads, number_of_runs, true);
-      break;
+  if (argc != 2) {
+    help(argv[0]);
+    return -1;
   }
-//  EndequeueLowBenchmark<lockfree::my_queue<int>>(10000000, 2, 5, true);
+  std::string queue_type{argv[1]};
+  if (queue_type == "mutex_queue") {
+    for (int threads = 1; threads <= 8; ++threads) EnqueueBenchmark<lockfree::mutex_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) DequeueBenchmark<lockfree::mutex_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) EndequeueHighBenchmark<lockfree::mutex_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) EndequeueLowBenchmark<lockfree::mutex_queue<int>>(size, threads, number_of_runs, true);
+  } else if (queue_type == "my_queue") {
+    for (int threads = 1; threads <= 8; ++threads) EnqueueBenchmark<lockfree::my_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) DequeueBenchmark<lockfree::my_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) EndequeueHighBenchmark<lockfree::my_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) EndequeueLowBenchmark<lockfree::my_queue<int>>(size, threads, number_of_runs, true);
+  } else if (queue_type == "ms_queue") {
+    for (int threads = 1; threads <= 8; ++threads) EnqueueBenchmark<lockfree::ms_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) DequeueBenchmark<lockfree::ms_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) EndequeueHighBenchmark<lockfree::ms_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) EndequeueLowBenchmark<lockfree::ms_queue<int>>(size, threads, number_of_runs, true);
+  } else if (queue_type == "epoch_queue") {
+    for (int threads = 1; threads <= 8; ++threads) EnqueueBenchmark<lockfree::epoch_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) DequeueBenchmark<lockfree::epoch_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) EndequeueHighBenchmark<lockfree::epoch_queue<int>>(size, threads, number_of_runs, true);
+    for (int threads = 1; threads <= 8; ++threads) EndequeueLowBenchmark<lockfree::epoch_queue<int>>(size, threads, number_of_runs, true);
+  } else {
+    help(argv[0]);
+    return -1;
+  }
+  return 0;
 }
