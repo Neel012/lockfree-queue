@@ -18,12 +18,7 @@ struct atomic_ptr {
     reset();
   }
 
-  bool operator==(atomic_ptr& rhs) noexcept {
-    return load() == rhs.load();
-  }
 
-  bool operator==(std::nullptr_t) noexcept {
-    return load() == nullptr;
   }
 
   pointer_type operator->() const noexcept {
@@ -32,14 +27,14 @@ struct atomic_ptr {
 
   void reset() noexcept {
     if (pointer_ != nullptr) {
-      delete pointer_;
-      pointer_ = nullptr;
+      delete release();
     }
   }
 
-  pointer_type release() noexcept {
-    pointer_type ptr = pointer_.exchange(nullptr);
-    return ptr;
+  pointer_type release(
+      std::memory_order order = std::memory_order_seq_cst) noexcept
+  {
+    return pointer_.exchange(nullptr, order);
   }
 
   pointer_type load(
@@ -56,9 +51,9 @@ struct atomic_ptr {
   }
 
   bool compare_exchange_weak(
-      pointer_type expected,
+      pointer_type& expected,
       pointer_type desired,
-      std::memory_order order = std::memory_order_seq_cst) volatile noexcept
+      std::memory_order order = std::memory_order_seq_cst) noexcept
   {
     return pointer_.compare_exchange_weak(expected, desired, order);
   }
