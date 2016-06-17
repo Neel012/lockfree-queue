@@ -92,4 +92,4 @@ TEST_CASE("ms_queue - 3 threads") {
   }
 }
 
-}
+} // namespace lockfree

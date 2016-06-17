@@ -25,18 +25,16 @@ struct BaseBenchmark {
     volatile bool wait = true;
     int size_per_thread = size / threads_count;
 
-    for (int i = 0; i < threads_count; ++i)
+    for (int i = 0; i < threads_count; ++i) {
       prepare_fn(queue, size_per_thread);
+    }
 
-
-    auto bnchm = [&] {
-      while (wait) { };
-      benchmark_fn(queue, size_per_thread);
-    };
-
-    for (int i = 0; i < threads_count; ++i)
-      threads.push_back(std::thread(bnchm));
-
+    for (int i = 0; i < threads_count; ++i) {
+      threads.push_back(std::thread([&] {
+        while (wait) { };
+        benchmark_fn(queue, size_per_thread);
+      }));
+    }
 
     std::this_thread::sleep_for(std::chrono::microseconds(10000));
     auto start = std::chrono::system_clock::now();

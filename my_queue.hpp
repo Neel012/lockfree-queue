@@ -104,4 +104,4 @@ struct my_queue {
 //    return value;
 //  }
 };
-}
+} // namespace lockfree

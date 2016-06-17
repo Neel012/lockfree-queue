@@ -13,7 +13,7 @@ struct ms_queue {
   using optional = std::experimental::optional<value_type>;
 
   ms_queue() {
-    pointer_type new_node(new node());
+    pointer_type new_node(new node{});
     tail_.store(new_node);
     head_.store(new_node);
   }
