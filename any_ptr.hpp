@@ -19,6 +19,8 @@ struct any_ptr {
 
   any_ptr() = default;
 
+  any_ptr(const any_ptr&) = delete;
+
   any_ptr(any_ptr&& rhs) noexcept
       : pointer_{std::move(rhs.pointer_)}, deleter_{std::move(rhs.deleter_)}
   {
@@ -34,6 +36,16 @@ struct any_ptr {
 
   ~any_ptr() noexcept {
     reset();
+  }
+
+  any_ptr& operator=(const any_ptr&) = delete;
+
+  any_ptr& operator=(any_ptr&& rhs) noexcept {
+    reset();
+    pointer_ = std::move(rhs.pointer_);
+    deleter_ = std::move(rhs.deleter_);
+    rhs.pointer_ = nullptr;
+    return *this;
   }
 
   void reset() noexcept {

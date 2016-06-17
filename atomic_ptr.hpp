@@ -11,6 +11,10 @@ struct atomic_ptr {
 
   atomic_ptr() = default;
 
+  atomic_ptr(const atomic_ptr&) = delete;
+
+  atomic_ptr(atomic_ptr&& rhs) noexcept : pointer_{rhs.release()} { }
+
   explicit atomic_ptr(pointer_type pointer) noexcept : pointer_{pointer}
   { }
 
@@ -18,7 +22,12 @@ struct atomic_ptr {
     reset();
   }
 
+  atomic_ptr& operator=(const atomic_ptr&) = delete;
 
+  atomic_ptr& operator=(atomic_ptr&& rhs) noexcept {
+    reset();
+    pointer_ = rhs.release();
+    return *this;
   }
 
   pointer_type operator->() const noexcept {

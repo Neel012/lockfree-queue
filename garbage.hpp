@@ -16,9 +16,11 @@ struct garbage_stack;
 // guard garbage stores type-erased managed pointers
 struct garbage {
   garbage() = default;
-  garbage(garbage&& g) noexcept
-      : data{std::move(g.data)}, next{std::move(g.next)}
-  { }
+  garbage(const garbage&) = delete;
+  garbage(garbage&&) = default;
+
+  garbage& operator=(const garbage&) = delete;
+  garbage& operator=(garbage&&) = default;
 
   void clear() noexcept {
     data.clear();

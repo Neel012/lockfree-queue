@@ -59,6 +59,17 @@ TEST_CASE("tagged_pointer - on heap") {
   delete i;
 }
 
+TEST_CASE("atomic_ptr - operator=") {
+  int counter{0};
+  SECTION("move") {
+    {
+      atomic_ptr<test_counter> p{new test_counter{counter}};
+      atomic_ptr<test_counter> i{std::move(p)};
+    }
+    REQUIRE(counter == 0);
+  }
+}
+
 TEST_CASE("any_ptr - Basic test") {
   int counter{0};
   auto* t = new test_counter{counter};
@@ -111,6 +122,15 @@ TEST_CASE("any_ptr - vector") {
 
 TEST_CASE("garbage - Basic test") {
   int counter{0};
+  SECTION("move operator=") {
+    {
+      garbage g;
+      g.emplace_back(new test_counter{counter});
+      garbage h;
+      h = std::move(g);
+    }
+    REQUIRE(counter == 0);
+  }
   SECTION("One garbage clear") {
     garbage l;
     for (int i{0}; i < 20; i++) {
