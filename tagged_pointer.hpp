@@ -22,8 +22,12 @@ struct tagged_pointer {
     return value_.counter_tag[3];
   }
 
-  bool operator==(const tagged_pointer& rhs) {
-    return count() == rhs.count() && ptr() == rhs.ptr();
+  bool operator==(const tagged_pointer& rhs) const noexcept {
+    return value_.ptr == rhs.value_.ptr;
+  }
+
+  bool operator!=(const tagged_pointer& rhs) const noexcept {
+    return !(*this == rhs);
   }
 
 private:
