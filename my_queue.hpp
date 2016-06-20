@@ -71,7 +71,7 @@ struct my_queue {
         front = _front;
       }
 
-      optional value = static_cast<int>(old_front->value);
+      optional value = static_cast<value_type>(old_front->value);
       delete old_front;
       return value;
     }
