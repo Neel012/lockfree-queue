@@ -6,6 +6,27 @@
 #include <epoch_queue.hpp>
 #include <mutex_queue.hpp>
 #include <iostream>
+#include <condition_variable>
+
+struct Barrier {
+  void wait() {
+    std::unique_lock< std::mutex > lk( _m );
+    if (_wait) {
+      _cv.wait(lk, [this] { return !_wait; } );
+    }
+
+  }
+
+  void start() {
+    _wait = false;
+    _cv.notify_all();
+  }
+
+private:
+  bool _wait = true;
+  std::condition_variable _cv;
+  std::mutex _m;
+};
 
 template<typename Queue>
 struct BaseBenchmark {
@@ -22,7 +43,7 @@ struct BaseBenchmark {
   double one_run() {
     Queue queue;
     std::vector<std::thread> threads;
-    volatile bool wait = true;
+    Barrier barrier;
     int size_per_thread = size / threads_count;
 
     for (int i = 0; i < threads_count; ++i) {
@@ -31,14 +52,13 @@ struct BaseBenchmark {
 
     for (int i = 0; i < threads_count; ++i) {
       threads.push_back(std::thread([&] {
-        while (wait) { };
+        barrier.wait();
         benchmark_fn(queue, size_per_thread);
       }));
     }
 
-    std::this_thread::sleep_for(std::chrono::microseconds(10000));
     auto start = std::chrono::system_clock::now();
-    wait = false;
+    barrier.start();
 
     for (auto &thread : threads)
       thread.join();
