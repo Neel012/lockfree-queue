@@ -1,43 +1,63 @@
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <cassert>
-#include <array>
 
 #include <garbage.hpp>
 
 namespace lockfree {
 
-static constexpr unsigned epoch_count{3};
+namespace {
+
+constexpr unsigned EPOCH_COUNT{3};
+
+unsigned inc_epoch(unsigned n) noexcept {
+  return (n+1) % EPOCH_COUNT;
+}
+
+unsigned dec_epoch(unsigned n) noexcept {
+  return (n-1) % EPOCH_COUNT;
+}
+
+}
 
 struct epoch_guard;
 
-// epoch manages pointers
 struct epoch {
 private:
   friend epoch_guard;
 
   void free_epoch(unsigned n) noexcept {
-    assert(active_[n % epoch_count].load() == 0);
-    unlinked_[n % epoch_count].clear();
+#ifndef NDEBUG
+    unsigned snapshot_active = active_[n];
+#endif
+    assert(snapshot_active == 0);
+    unlinked_[n].clear();
   }
 
   bool all_observed_epoch(unsigned n) const noexcept {
-    return active_[(n - 1) % epoch_count].load() == 0;
+#ifndef NDEBUG
+    unsigned snapshot_global_epoch = global_epoch_;
+#endif
+    assert(snapshot_global_epoch == n || snapshot_global_epoch == inc_epoch(n));
+    return active_[dec_epoch(n)] == 0;
   }
 
-  bool progress_epoch(unsigned guard_epoch) noexcept {
-    return global_epoch_.compare_exchange_strong(guard_epoch, guard_epoch + 1);
+  bool progress_epoch(unsigned current_epoch) noexcept {
+    assert(current_epoch < 3 && current_epoch >= 0);
+    return global_epoch_.compare_exchange_strong(current_epoch, inc_epoch(current_epoch));
   }
 
   void merge_garbage(garbage&& local_unlinked, unsigned local_epoch) noexcept {
-    unlinked_[local_epoch % epoch_count].merge(local_unlinked);
+    unlinked_[local_epoch].merge(local_unlinked);
+    assert(local_unlinked.empty());
   }
 
   /* data */
   std::atomic<unsigned> global_epoch_{1};
-  std::array<std::atomic<unsigned>, epoch_count> active_;
-  std::array<garbage_stack, epoch_count> unlinked_;
+  std::array<std::atomic<unsigned>, EPOCH_COUNT> active_;
+  std::array<garbage_stack, EPOCH_COUNT> unlinked_;
 };
 
 struct epoch_guard {
@@ -45,10 +65,11 @@ struct epoch_guard {
   explicit epoch_guard(epoch& e) noexcept
     : e_{e}, guard_epoch_{e.global_epoch_.load()}
   {
-    e_.active_[guard_epoch_ % epoch_count]++; // observe the current epoch
+    assert(guard_epoch_ < 3 && guard_epoch_ >= 0);
+    e_.active_[guard_epoch_]++; // observe the current epoch
     if (e_.all_observed_epoch(guard_epoch_) && e_.progress_epoch(guard_epoch_))
     {
-      e_.free_epoch(guard_epoch_ - 1);
+      e_.free_epoch(dec_epoch(guard_epoch_));
     }
   }
 
@@ -64,9 +85,11 @@ struct epoch_guard {
   }
 
   void unpin() noexcept {
-    e_.merge_garbage(std::move(local_unlinked_), guard_epoch_);
-    e_.active_[guard_epoch_ % epoch_count]--;
-    unpinned_ = true;
+    if (!unpinned_) {
+      e_.merge_garbage(std::move(local_unlinked_), guard_epoch_);
+      e_.active_[guard_epoch_]--;
+      unpinned_ = true;
+    }
   }
 
 private:
