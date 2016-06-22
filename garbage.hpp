@@ -64,8 +64,8 @@ struct garbage_stack {
     }
     auto* new_node = new garbage{std::move(g)};
     assert(new_node->next == nullptr);
+    garbage* head = head_.load();
     while (true) {
-      garbage* head = head_.load();
       new_node->next = head;
       if (head_.compare_exchange_weak(head, new_node)) {
         break;
