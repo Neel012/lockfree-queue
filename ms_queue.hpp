@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <experimental/optional>
 
 #include <tagged_pointer.hpp>
@@ -84,11 +85,11 @@ private:
             break;
           }
         } else {
-          tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count()));
+          tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count() + 1));
         }
       }
     }
-    tail_.compare_exchange_weak(tail, pointer_type(new_node, tail.count()));
+    tail_.compare_exchange_weak(tail, pointer_type(new_node, tail.count() + 1));
   }
 
   /* data */
