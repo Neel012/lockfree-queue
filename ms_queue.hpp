@@ -36,20 +36,23 @@ struct ms_queue {
   }
 
   optional dequeue() noexcept {
+    assert(head_.load() != nullptr && tail_.load() != nullptr);
     optional value;
-    pointer_type head;
+    pointer_type head = head_.load();
+    pointer_type tail = tail_.load();
     while (true) {
-      head = head_.load();
-      pointer_type tail = tail_.load();
       pointer_type next = head.ptr()->next.load();
-      if (head == head_) {
+      if (head != head_) {
+        head = head_.load();
+      } else {
         if (head.ptr() == tail.ptr()) {
           if (next.ptr() == nullptr) {
-            return optional();
+            return optional{};
           }
           tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count() + 1));
+          head = head_.load();
         } else {
-          value = next.ptr()->data;
+          value = std::move(next.ptr()->data);
           if (head_.compare_exchange_weak(head, pointer_type(next.ptr(), head.count() + 1))) {
             break;
           }
