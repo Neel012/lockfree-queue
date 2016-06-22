@@ -19,8 +19,13 @@ struct ms_queue {
     head_.store(new_node);
   }
 
-  ~ms_queue() {
-    while (dequeue()) { }
+  ~ms_queue() noexcept {
+    node* n = head_.exchange(nullptr).ptr();
+    while (n != nullptr) {
+      node* d = n;
+      n = n->next.load().ptr();
+      delete d;
+    }
   }
 
   bool empty() const noexcept {
