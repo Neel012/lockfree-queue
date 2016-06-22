@@ -1,8 +1,9 @@
 #pragma once
 
-#include "catch.hpp"
 #include <future>
 #include <thread>
+
+#include <tests/catch.hpp>
 
 namespace lockfree {
 

@@ -1,6 +1,6 @@
 #include <epoch_queue.hpp>
-#include "queue_tests.hpp"
-#include "catch.hpp"
+#include <tests/queue_tests.hpp>
+#include <tests/catch.hpp>
 
 namespace lockfree {
 

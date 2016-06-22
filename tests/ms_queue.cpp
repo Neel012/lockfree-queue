@@ -1,6 +1,6 @@
 #include <ms_queue.hpp>
-#include "catch.hpp"
-#include "queue_tests.hpp"
+#include <tests/queue_tests.hpp>
+#include <tests/catch.hpp>
 
 namespace lockfree {
 
