@@ -15,8 +15,8 @@ struct tagged_pointer {
     value_.counter_tag[3] = count;
   }
 
-  T* ptr() const {
-    return (T*)(ptr_mask & value_.ptr);
+  T* ptr() const noexcept {
+    return reinterpret_cast<T*>(ptr_mask & value_.ptr);
   }
 
   uint16_t count() const {
