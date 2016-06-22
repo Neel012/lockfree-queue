@@ -81,18 +81,20 @@ private:
   };
 
   void enqueue_(node* new_node) noexcept {
+    node* tail = tail_.load();
+    node* next = tail->next.load();
     while (true) {
-      node* tail = tail_.load();
-      node* next = tail->next.load();
+      next = tail->next.load();
       if (next == nullptr) {
         if (tail->next.compare_exchange_weak(next, new_node)) {
-          tail_.compare_exchange_weak(tail, new_node);
-          return;
+          break;
         }
+        tail = tail_.load();
       } else {
         tail_.compare_exchange_weak(tail, next);
       }
     }
+    tail_.compare_exchange_weak(tail, new_node);
   }
 
   /* data */
