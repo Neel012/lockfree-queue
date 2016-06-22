@@ -19,6 +19,14 @@ struct test_counter {
   int& n;
 };
 
+struct test_atomic_counter {
+  test_atomic_counter(std::atomic<int>* i) : n{i} { *n++; }
+
+  ~test_atomic_counter() { *n--; }
+
+  std::atomic<int>* n;
+};
+
 TEST_CASE("tagged_pointer - on stack") {
   int i = 42;
 
@@ -155,6 +163,25 @@ TEST_CASE("garbage - Basic test") {
     l.clear();
     REQUIRE(counter == 0);
   }
+  SECTION("garbage dtor") {
+    {
+      garbage g;
+      g.emplace_back(new test_counter{counter});
+    }
+    REQUIRE(counter == 0);
+  }
+  SECTION("garbage move dtor") {
+    {
+      garbage h;
+      {
+        garbage g;
+        g.emplace_back(new test_counter{counter});
+        h = std::move(g);
+      }
+      REQUIRE(counter == 1);
+    }
+    REQUIRE(counter == 0);
+  }
 }
 
 TEST_CASE("garbage_stack - Basic test") {
@@ -241,6 +268,26 @@ TEST_CASE("Epoch - Basic test") {
       }
     }
     REQUIRE(counter == 4);
+  }
+  REQUIRE(counter == 0);
+}
+
+TEST_CASE("Epoch - guard") {
+  std::atomic<int> counter{0};
+  constexpr unsigned COUNT{10};
+  std::array<std::thread, COUNT> threads;
+  epoch e;
+  for (auto& t : threads) {
+    t = std::thread([&] {
+      epoch_guard g{e};
+      g.unlink(new test_atomic_counter{&counter});
+    });
+  }
+  for (auto& t : threads) {
+    t.join();
+  }
+  for (unsigned i = 0; i < 3; i++) {
+    epoch_guard g{e};
   }
   REQUIRE(counter == 0);
 }
