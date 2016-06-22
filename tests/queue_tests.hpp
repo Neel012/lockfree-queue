@@ -102,4 +102,41 @@ void test_queue_t3(Q<int>& q, size_t n) {
   t2.join();
 }
 
+template <typename Q>
+void produce(Q* q, std::size_t count) {
+  for (; count > 0; count--) {
+    q->enqueue(42);
+  }
+}
+
+template <typename Q>
+void consume(Q* q, std::size_t count) {
+  while (count > 0) {
+    if (q->dequeue()) {
+      count--;
+    }
+  }
+}
+
+template <template <typename> class Q>
+void test_queue_manythreads(unsigned producers, unsigned consumers) {
+  const std::size_t MESSAGES{10'000};
+  std::vector<std::thread> p{producers};
+  std::vector<std::thread> c{consumers};
+  Q<int> q;
+  for (auto& t : p) {
+    t = std::thread(&produce<decltype(q)>, &q, MESSAGES  / producers);
+  }
+  for (auto& t : c) {
+    t = std::thread(&consume<decltype(q)>, &q, MESSAGES / consumers);
+  }
+  for (auto& t : p) {
+    t.join();
+  }
+  for (auto& t : c) {
+    t.join();
+  }
+  REQUIRE(q.empty());
+}
+
 } // namespace lockfree

@@ -102,4 +102,11 @@ TEST_CASE("epoch_queue - 3 threads") {
   }
 }
 
+TEST_CASE("epoch_queue - many threads") {
+  test_queue_manythreads<epoch_queue>(1, 1);
+  test_queue_manythreads<epoch_queue>(2, 2);
+  test_queue_manythreads<epoch_queue>(4, 4);
+  test_queue_manythreads<epoch_queue>(6, 6);
+}
+
 } // namespace lockfree

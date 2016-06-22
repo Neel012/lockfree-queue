@@ -92,4 +92,11 @@ TEST_CASE("ms_queue - 3 threads") {
   }
 }
 
+TEST_CASE("my_queue - many threads") {
+  test_queue_manythreads<my_queue>(1, 1);
+  test_queue_manythreads<my_queue>(2, 2);
+  test_queue_manythreads<my_queue>(4, 4);
+  test_queue_manythreads<my_queue>(6, 6);
+}
+
 } // namespace lockfree
