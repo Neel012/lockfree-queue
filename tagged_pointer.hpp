@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 
 namespace lockfree {
@@ -30,6 +31,14 @@ struct tagged_pointer {
     return !(*this == rhs);
   }
 
+  bool operator==(std::nullptr_t) const noexcept {
+    return ptr() == nullptr;
+  }
+
+  bool operator!=(std::nullptr_t) const noexcept {
+    return !(*this == nullptr);
+  }
+
 private:
   union pointer_value {
     uint64_t ptr;
@@ -42,3 +51,4 @@ private:
 };
 
 } // namespace lockfree
+
