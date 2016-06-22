@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+#include <cassert>
 #include <experimental/optional>
 
 #include <epoch.hpp>
@@ -39,23 +41,32 @@ struct epoch_queue {
   }
 
   optional dequeue() noexcept {
+    assert(head_.load() != nullptr && tail_.load() != nullptr);
+    optional value;
+    epoch_guard g{epoch_};
+    node* head = head_.load();
+    node* tail = tail_.load();
     while (true) {
-      epoch_guard g{epoch_};
-      node* head = head_.load();
-      node* tail = tail_.load();
       node* next = head->next.load();
-      if (head == tail) {
-        if (next == nullptr) {
-          return optional();
-        }
-        tail_.compare_exchange_weak(tail, next);
+      if (head != head_) {
+        head = head_.load();
       } else {
-        if (head_.compare_exchange_weak(head, next)) {
-          g.unlink(head);
-          return next->data;
+        if (head == tail) {
+          if (next == nullptr) {
+            return optional{};
+          }
+          tail_.compare_exchange_weak(tail, next);
+          head = head_.load();
+        } else {
+          value = std::move(next->data);
+          if (head_.compare_exchange_weak(head, next)) {
+            break;
+          }
         }
       }
     }
+    g.unlink(head);
+    return value;
   }
 
 private:
