@@ -84,16 +84,19 @@ private:
 
   void enqueue_(node* new_node) noexcept {
     pointer_type tail = tail_.load();
-    pointer_type next = tail.ptr()->next.load();
     while (true) {
-      next = tail.ptr()->next.load();
-      if (next.ptr() == nullptr) {
-        if (tail.ptr()->next.compare_exchange_weak(next, pointer_type(new_node, next.count() + 1))) {
-          break;
-        }
-        tail = tail_.load();
+      if (tail != tail_) {
+        tail = tail_;
       } else {
-        tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count() + 1));
+        pointer_type next = tail.ptr()->next.load();
+        if (next.ptr() == nullptr) {
+          if (tail.ptr()->next.compare_exchange_weak(next, pointer_type(new_node, next.count() + 1))) {
+            break;
+          }
+          tail = tail_.load();
+        } else {
+          tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count() + 1));
+        }
       }
     }
     tail_.compare_exchange_weak(tail, pointer_type(new_node, tail.count() + 1));
