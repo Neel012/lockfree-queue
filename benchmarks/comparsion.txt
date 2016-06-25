@@ -3,14 +3,6 @@ All lock-free queues are really close, they differ only in some details.
 my queue -
     enqueue is even wait-free, so really fast and non blocking adding of elements
 
-epoch queue -
-    there is some not-trivial work with epochs, so it's a bit slower for few threads
-
-ms queue -
-    although just rewritten from pseudo-code, there is some error and last benchmark
-    doesn't work. But who knows what can be wrong, when there's nothing written in the
-    paper about how does it work.
-
 mutex queue -
     really slow for more threads, but really, really fast to implement (so start with this
     one and implement better only if its a performance bottleneck.

@@ -6,6 +6,21 @@
 
 #include <garbage.hpp>
 
+// How to use epoch memory reclamation:
+// All you have to do is add an epoch object to you data  structure to hold a
+// state of epoch's garbages. Concurrent operations removing pointers from
+// datastrucutres need to use an `epoch_quard` and call its unlink method on
+// removed pointers. Unlinked pointers will be freed only after no other
+// concurrent operations hold  references to them.
+//
+// Example:
+// void pop_front() {
+//   epoch_guard g;
+//   old_front <- remove pointer from data structure and update it using
+//                lockfree primitives
+//   g.unlink(old_front);
+// }
+
 namespace lockfree {
 
 namespace {
