@@ -36,7 +36,7 @@ struct ms_queue {
     enqueue_(new node(value));
   }
 
-  void enqueue(value_type&& value) noexcept {
+  void enqueue(value_type&& value) {
     enqueue_(new node(std::move(value)));
   }
 
