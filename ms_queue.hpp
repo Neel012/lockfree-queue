@@ -49,18 +49,21 @@ struct ms_queue {
       pointer_type next = head.ptr()->next.load();
       if (head != head_) {
         head = head_.load();
+        tail = tail_.load();
       } else {
         if (head.ptr() == tail.ptr()) {
           if (next.ptr() == nullptr) {
             return optional{};
           }
-          tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count() + 1));
           head = head_.load();
+          tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count() + 1));
         } else {
+          assert(next.ptr() != nullptr);
           value = std::move(next.ptr()->data);
           if (head_.compare_exchange_weak(head, pointer_type(next.ptr(), head.count() + 1))) {
             break;
           }
+          tail = tail_.load();
         }
       }
     }
@@ -83,12 +86,13 @@ private:
   };
 
   void enqueue_(node* new_node) noexcept {
+    assert(new_node != nullptr);
     pointer_type tail = tail_.load();
     while (true) {
+      pointer_type next = tail.ptr()->next.load();
       if (tail != tail_) {
-        tail = tail_;
+        tail = tail_.load();
       } else {
-        pointer_type next = tail.ptr()->next.load();
         if (next.ptr() == nullptr) {
           if (tail.ptr()->next.compare_exchange_weak(next, pointer_type(new_node, next.count() + 1))) {
             break;

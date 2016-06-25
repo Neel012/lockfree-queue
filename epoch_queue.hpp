@@ -50,18 +50,21 @@ struct epoch_queue {
       node* next = head->next.load();
       if (head != head_) {
         head = head_.load();
+        tail = tail_.load();
       } else {
         if (head == tail) {
           if (next == nullptr) {
             return optional{};
           }
-          tail_.compare_exchange_weak(tail, next);
           head = head_.load();
+          tail_.compare_exchange_weak(tail, next);
         } else {
+          assert(next != nullptr);
           value = std::move(next->data);
           if (head_.compare_exchange_weak(head, next)) {
             break;
           }
+          tail = tail_.load();
         }
       }
     }
@@ -81,12 +84,13 @@ private:
   };
 
   void enqueue_(node* new_node) noexcept {
+    assert(new_node != nullptr);
     node* tail = tail_.load();
     while (true) {
+      node* next = tail->next.load();
       if (tail != tail_) {
         tail = tail_.load();
       } else {
-        node* next = tail->next.load();
         if (next == nullptr) {
           if (tail->next.compare_exchange_weak(next, new_node)) {
             break;
