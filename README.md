@@ -46,6 +46,7 @@ be freed.
 
 ##Comparison##
 All lock-free queues are really close, they differ only in some details.
+Benchmarked on Intel(R) Core(TM) i5-3230M.
 
 ###my_queue###
 - enqueue is even wait-free, so really fast and non blocking adding of elements
