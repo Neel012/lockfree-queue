@@ -34,7 +34,7 @@ namespace lockfree {
 
     bool empty() const {
       std::lock_guard<std::mutex> l(mutex);
-      queue.empty();
+      return queue.empty();
     }
 
   private:
