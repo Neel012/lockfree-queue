@@ -10,6 +10,15 @@ Compare their performance.
 1. Keir Fraser: Practical Lock Freedom (p. 79)
 https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-579.pdf
 
+#Interface#
+All queues have  common interface:
+
+`void enqueue(T&& value)`
+
+`void enqueue(T& value)`
+
+`std::experimental::optional<T> dequeue()`
+
 ##Description##
 
 #My queue#
