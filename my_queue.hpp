@@ -19,11 +19,11 @@ struct my_queue {
 
     /* data */
     value_type value;
-    volatile Node *previous{nullptr};
+    Node *previous{nullptr};
   };
 
-  std::atomic<volatile Node *> back{nullptr};
-  std::atomic<volatile Node *> front{nullptr};
+  std::atomic<Node *> back{nullptr};
+  std::atomic<Node *> front{nullptr};
 
 
   void enqueue(value_type &value) noexcept {
@@ -43,7 +43,7 @@ struct my_queue {
   }
 
   void enqueue_(Node *node) noexcept {
-    volatile Node *old_back = back.exchange(node);
+    Node *old_back = back.exchange(node);
     if (old_back == nullptr) {
       front = node;
     } else {
@@ -53,8 +53,8 @@ struct my_queue {
 
 //  mene lock-free verze, ale funguje na 100%.
   optional dequeue() noexcept {
-    volatile Node *old_front;
-    volatile Node *_front;
+    Node *old_front;
+    Node *_front;
     while (!empty()) {
 
       old_front = front.exchange(nullptr);
@@ -71,7 +71,7 @@ struct my_queue {
         front = _front;
       }
 
-      optional value = static_cast<value_type>(old_front->value);
+      optional value = old_front->value;
       delete old_front;
       return value;
     }
