@@ -18,6 +18,7 @@ struct Barrier {
   }
 
   void start() {
+    std::unique_lock < std::mutex > lk( _m );
     _wait = false;
     _cv.notify_all();
   }
@@ -169,7 +170,7 @@ void help(char name[]) {
 
 int main(int argc, char* argv[]) {
   int size = 10000000;
-  int number_of_runs = 10;
+  int number_of_runs = 2;
   if (argc != 2) {
     help(argv[0]);
     return -1;
