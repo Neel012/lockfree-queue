@@ -25,8 +25,7 @@ struct atomic_ptr {
   atomic_ptr& operator=(const atomic_ptr&) = delete;
 
   atomic_ptr& operator=(atomic_ptr&& rhs) noexcept {
-    reset();
-    pointer_ = rhs.release();
+    reset(rhs.release());
     return *this;
   }
 
@@ -34,9 +33,20 @@ struct atomic_ptr {
     return pointer_.load();
   }
 
-  void reset() noexcept {
-    if (pointer_ != nullptr) {
-      delete release();
+  void reset(std::memory_order order = std::memory_order_seq_cst) noexcept {
+    pointer_type p = release(order);
+    if (p != nullptr) {
+      delete p;
+    }
+  }
+
+  pointer_type reset(
+      pointer_type p,
+      std::memory_order order = std::memory_order_seq_cst) noexcept
+  {
+    pointer_type old = pointer_.exchange(p, order);
+    if (old != nullptr) {
+      delete old;
     }
   }
 
