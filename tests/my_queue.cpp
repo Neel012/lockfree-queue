@@ -40,19 +40,23 @@ TEST_CASE("ms_queue - only enqueue") {
   }
 }
 
-TEST_CASE("ms_queue - basic async") {
+TEST_CASE("ms_queue - basic threaded") {
   using queue_type = my_queue<int>;
-  SECTION("3 elements") {
+  SECTION("2 threads") {
+    queue_type q;
+    test_queue_basic2(q, 2);
+  }
+  SECTION("3 threads") {
     queue_type q;
     test_queue_basic2(q, 3);
   }
-  SECTION("100 elements") {
+  SECTION("4 threads") {
     queue_type q;
-    test_queue_basic2(q, 100);
+    test_queue_basic2(q, 4);
   }
-  SECTION("1000 elements") {
+  SECTION("6 threads") {
     queue_type q;
-    test_queue_basic2(q, 1000);
+    test_queue_basic2(q, 6);
   }
 }
 

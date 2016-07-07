@@ -29,18 +29,6 @@ void test_queue_basic(Q<int>& q, size_t count) {
 }
 
 template <template <typename> class Q>
-void test_queue_basic2(Q<int>& q, size_t count) {
-  REQUIRE(q.empty());
-  for (size_t i{0}; i < count; i++) {
-    std::async([&] {
-      q.enqueue(1);
-      q.dequeue();
-    });
-  }
-  REQUIRE(q.empty());
-}
-
-template <template <typename> class Q>
 void test_only_enqueue(Q<int>& q, size_t count) {
   REQUIRE(q.empty());
   for (size_t i{0}; i < count; i++) {
@@ -53,53 +41,66 @@ template <typename Q>
 void maybe_recieve(Q& q, size_t count) {
   int i = 1;
   while (i <= count) {
-    //REQUIRE(!q.empty());
     auto pop = q.dequeue();
     if (pop) {
       REQUIRE(*pop == i);
       i++;
     }
   }
-  REQUIRE(q.empty());
 }
 
 template <typename Q>
 void maybe_recieve_anything(Q& q, size_t count) {
   int i = 1;
   while (i <= count) {
-    //REQUIRE(!q.empty());
-    auto pop = q.dequeue();
-    if (pop) {
+    if (q.dequeue()) {
       i++;
     }
   }
 }
 
 template <template <typename> class Q>
+void test_queue_basic2(Q<int>& q, size_t count) {
+  REQUIRE(q.empty());
+  std::vector<std::thread> threads(count);
+  for (auto& t : threads) {
+    t = std::thread([&] {
+      q.enqueue(1);
+      maybe_recieve_anything(q, 1);
+    });
+  }
+  for (auto& t : threads) {
+    t.join();
+  }
+  REQUIRE(q.empty());
+}
+
+template <template <typename> class Q>
 void test_queue_t2(Q<int>& q, size_t n) {
-  auto t1 = std::thread([&] {
+  auto t = std::thread([&] {
     for (size_t i{0}; i < n; i++) {
       q.enqueue(i + 1);
     }
   });
-  auto t2 = std::thread([&] { maybe_recieve(q, n); });
-  t1.join();
-  t2.join();
+  maybe_recieve(q, n);
+  t.join();
+  REQUIRE(q.empty());
 }
 
 template <template <typename> class Q>
 void test_queue_t3(Q<int>& q, size_t n) {
   auto t1 = std::thread([&] { maybe_recieve_anything(q, n); });
   auto t2 = std::thread([&] {
-    for (size_t i{0}; i < n/2; i++) {
+    for (std::size_t i{0}; i < n/2; i++) {
       q.enqueue(i + 1);
     }
   });
-  for (size_t i{0}; i < (n / 2) + 2; i++) {
+  for (std::size_t i{0}; i < (n / 2) + (n % 2); i++) {
     q.enqueue(i + 1);
   }
   t1.join();
   t2.join();
+  REQUIRE(q.empty());
 }
 
 struct producer_value {
