@@ -9,22 +9,18 @@
 #include <condition_variable>
 
 struct Barrier {
+  Barrier( int w ) : _w( w ), _a( 0 ) {}
   void wait() {
     std::unique_lock< std::mutex > lk( _m );
-    if (_wait) {
-      _cv.wait(lk, [this] { return !_wait; } );
-    }
-
+    if ( ++_a == _w ) {
+      lk.unlock();
+      _cv.notify_all();
+    } else
+      _cv.wait(lk, [this]{ return _a == _w; });
   }
-
-  void start() {
-    std::unique_lock < std::mutex > lk( _m );
-    _wait = false;
-    _cv.notify_all();
-  }
-
 private:
-  bool _wait = true;
+  int _w;
+  int _a;
   std::condition_variable _cv;
   std::mutex _m;
 };
@@ -44,7 +40,7 @@ struct BaseBenchmark {
   double one_run() {
     Queue queue;
     std::vector<std::thread> threads;
-    Barrier barrier;
+    Barrier barrier(threads_count);
     int size_per_thread = size / threads_count;
 
     for (int i = 0; i < threads_count; ++i) {
@@ -59,7 +55,6 @@ struct BaseBenchmark {
     }
 
     auto start = std::chrono::system_clock::now();
-    barrier.start();
 
     for (auto &thread : threads)
       thread.join();
@@ -170,7 +165,7 @@ void help(char name[]) {
 
 int main(int argc, char* argv[]) {
   int size = 10000000;
-  int number_of_runs = 2;
+  int number_of_runs = 10;
   if (argc != 2) {
     help(argv[0]);
     return -1;
