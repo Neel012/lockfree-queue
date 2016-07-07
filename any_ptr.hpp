@@ -71,6 +71,14 @@ struct any_ptr {
     return get() == nullptr;
   }
 
+  bool operator!=(const any_ptr& rhs) {
+    return !(*this == rhs);
+  }
+
+  bool operator!=(std::nullptr_t) {
+    return !(*this == nullptr);
+  }
+
 private:
   pointer_type pointer_{nullptr};
   std::function<deleter_type> deleter_;
