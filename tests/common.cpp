@@ -3,7 +3,6 @@
 #include <vector>
 
 #include <tests/catch.hpp>
-#include <any_ptr.hpp>
 #include <atomic_ptr.hpp>
 #include <epoch.hpp>
 #include <garbage.hpp>
@@ -76,56 +75,6 @@ TEST_CASE("atomic_ptr - operator=") {
     {
       atomic_ptr<test_counter> p{new test_counter{counter}};
       atomic_ptr<test_counter> i{std::move(p)};
-    }
-    REQUIRE(counter == 0);
-  }
-}
-
-TEST_CASE("any_ptr - Basic test") {
-  int counter{0};
-  auto* t = new test_counter{counter};
-  SECTION("Correct destruction") {
-    {
-      any_ptr a{t};
-      REQUIRE(counter == 1);
-    }
-    REQUIRE(counter == 0);
-  }
-  SECTION("Move constructor") {
-    {
-      //auto a = make_any_ptr(t);
-      any_ptr a{t};
-      //REQUIRE(counter == 1);
-      any_ptr b{std::move(a)};
-      REQUIRE(counter == 1);
-    }
-    REQUIRE(counter == 0);
-  }
-}
-
-TEST_CASE("any_ptr - vector") {
-  int counter{0};
-  SECTION("dtor") {
-    {
-      std::vector<any_ptr> data;
-      for (int i{0}; i < 20; i++) {
-        data.emplace_back(new test_counter{counter});
-      }
-      REQUIRE(counter == 20);
-    }
-    REQUIRE(counter == 0);
-  }
-  SECTION("move") {
-    {
-      std::vector<any_ptr> data;
-      for (int i{0}; i < 20; i++) {
-        data.emplace_back(new test_counter{counter});
-      }
-      REQUIRE(counter == 20);
-      std::vector<any_ptr> m{std::move(data)};
-      REQUIRE(counter == 20);
-      data.clear();
-      REQUIRE(counter == 20);
     }
     REQUIRE(counter == 0);
   }

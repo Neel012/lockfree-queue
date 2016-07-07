@@ -6,7 +6,6 @@
 #include <memory>
 #include <vector>
 
-#include <any_ptr.hpp>
 #include <atomic_ptr.hpp>
 
 namespace lockfree {
@@ -32,11 +31,15 @@ struct garbage {
 
   template <typename E>
   void emplace_back(E* ptr) {
-    data.emplace_back(ptr);
+    data.emplace_back(any_ptr{ptr, [](void* d) { delete static_cast<E*>(d); }});
   }
 
 private:
   friend garbage_stack;
+
+  using deleter_type = void(*)(void*);
+  using any_ptr = std::unique_ptr<void, deleter_type>;
+
   std::vector<any_ptr> data;
   garbage* next{nullptr};
 };
