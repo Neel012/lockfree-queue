@@ -19,7 +19,7 @@ struct my_queue {
 
     /* data */
     value_type value;
-    Node *previous{nullptr};
+    std::atomic<Node *> previous{nullptr};
   };
 
   std::atomic<Node *> back{nullptr};
