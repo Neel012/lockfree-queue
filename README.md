@@ -46,7 +46,12 @@ be freed.
 
 ##Comparison##
 All lock-free queues are really close, they differ only in some details.
-Benchmarked on Intel(R) Core(TM) i5-3230M.
+
+Benchmarked on:  
+```
+CPU model:  Six-Core AMD Opteron(tm) Processor 8439 SE  
+4 CPU,  6 physical cores per CPU, total 24 logical CPU units
+```
 
 ###my_queue###
 - enqueue is even wait-free, so really fast and non blocking adding of elements
