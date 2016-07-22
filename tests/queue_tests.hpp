@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <future>
 #include <thread>
 
@@ -88,9 +89,15 @@ void test_queue_t3(std::size_t n) {
   REQUIRE(q.empty());
 }
 
+template <typename T>
+using Vec2D = std::vector<std::vector<T>>;
+
 struct producer_value {
+  producer_value() = default;
+  producer_value(unsigned p, int v) : producer{p}, value{v} {}
   unsigned producer;
   int value;
+  char padding[256];
 };
 
 template <typename Q>
@@ -100,76 +107,39 @@ void produce(Q& q, unsigned producer_num, std::vector<int>& testset) {
   }
 }
 
+bool check_order(std::vector<producer_value>& received, std::size_t chunk, unsigned producers_count) {
+  std::vector<int> producer_values(producers_count, 0);
+  std::size_t i = 0;
+  for (auto& pv : received) {
+    if (producer_values[pv.producer] >= pv.value) {
+      return false;
+    }
+    producer_values[pv.producer] = pv.value;
+    ++i;
+  }
+  return chunk == i;
+}
+
 template <typename Q>
-std::vector<producer_value> consume(Q& q, std::size_t count) {
-  std::vector<producer_value> received(count);
-  for (std::size_t i{0}; i < count;) {
+bool consume(Q& q, std::size_t chunk, unsigned producers_count) {
+  std::vector<producer_value> received(chunk);
+  for (std::size_t i = 0; i < chunk;) {
     auto r = q.dequeue();
     if (r) {
       received[i] = *r;
       ++i;
     }
   }
-  return received;
+  return check_order(received, chunk, producers_count);
 }
 
-std::vector<std::vector<int>> gen_seqset(unsigned producers_count, std::size_t chunk_size) {
-  std::vector<std::vector<int>> testset{producers_count, std::vector<int>(chunk_size)};
+Vec2D<int> gen_seqset(unsigned producers_count, std::size_t chunk) {
+  Vec2D<int> testset(producers_count, std::vector<int>(chunk));
   unsigned i{1};
   for (auto& s : testset) {
-    std::generate_n(s.begin(), chunk_size, [&i]{ return i++; });
+    std::generate(s.begin(), s.end(), [&i]{ return i++; });
   }
   return testset;
-}
-
-void check_testset(
-    std::vector<std::vector<int>>& testset,
-    std::vector<std::vector<producer_value>>& received,
-    unsigned messages)
-{
-  const unsigned producers_count = testset.size();
-  const unsigned consumers_count = received.size();
-  const std::size_t producer_chunk = messages / producers_count;
-  const std::size_t consumer_chunk = messages / consumers_count;
-  std::vector<std::size_t> producer_idx(producers_count, 0);
-  std::vector<std::size_t> consumer_idx(consumers_count, 0);
-
-  unsigned msg_processed{0};
-  for (unsigned msg_counter{1}; msg_counter <= messages; ++msg_counter) {
-    REQUIRE(std::any_of(
-        consumer_idx.begin(),
-        consumer_idx.end(),
-        [consumer_chunk](std::size_t i) { return i < consumer_chunk; }
-    ));
-    REQUIRE(std::any_of(
-        producer_idx.begin(),
-        producer_idx.end(),
-        [producer_chunk](std::size_t i) { return i < producer_chunk; }
-    ));
-    for (unsigned i{0}; i < consumers_count; ++i) {
-      if (consumer_idx[i] >= consumer_chunk) {
-        continue;
-      }
-      producer_value pv = received[i][consumer_idx[i]];
-      if (testset[pv.producer][producer_idx[pv.producer]] == pv.value) {
-        ++consumer_idx[i];
-        ++producer_idx[pv.producer];
-        ++msg_processed;
-        break;
-      }
-    }
-    REQUIRE(msg_counter == msg_processed); // One or more messages are not in allowed order
-  }
-  REQUIRE(std::all_of(
-      consumer_idx.begin(),
-      consumer_idx.end(),
-      [consumer_chunk](std::size_t i) { return i == consumer_chunk; }
-  ));
-  REQUIRE(std::all_of(
-      producer_idx.begin(),
-      producer_idx.end(),
-      [producer_chunk](std::size_t i) { return i == producer_chunk; }
-  ));
 }
 
 constexpr unsigned gcd(unsigned p, unsigned c) {
@@ -202,28 +172,36 @@ void test_queue_manythreads(
     std::size_t messages)
 {
   messages = remainderless(messages, lcm(producers_count, consumers_count));
-  std::vector<std::vector<int>> testset = gen_seqset(producers_count, messages / producers_count);
-  std::vector<std::thread> producers{producers_count};
-  std::vector<std::future<std::vector<producer_value>>> received(consumers_count);
+  Vec2D<int> testset = gen_seqset(producers_count, messages / producers_count);
+  std::vector<std::thread> producers(producers_count);
+  std::vector<std::future<bool>> valid_orders(consumers_count);
   Q<producer_value> q;
-
-  for (unsigned i{0}; i < producers_count; ++i) {
+  for (unsigned i = 0; i < producers_count; ++i) {
     producers[i] = std::thread(&produce<decltype(q)>, std::ref(q), i, std::ref(testset[i]));
   }
-  for (auto& f : received) {
-    f = std::async(std::launch::async, &consume<decltype(q)>, std::ref(q), messages / consumers_count);
+  for (auto& f : valid_orders) {
+    f = std::async(std::launch::async, [&]{ return consume(q, messages / consumers_count, producers_count); });
   }
-  for (auto& t : producers) {
-    t.join();
-  }
-  for (auto& f : received) {
-    f.wait();
-  }
+  std::for_each(producers.begin(), producers.end(), [](auto& t){ t.join(); } );
+  std::for_each(valid_orders.begin(), valid_orders.end(), [](auto& f){ REQUIRE(f.get()); });
   REQUIRE(q.empty());
-  std::vector<std::vector<producer_value>> received_unpack(consumers_count);
-  std::transform(received.begin(), received.end(), received_unpack.begin(),
-      [](auto& f){ return f.get(); });
-  check_testset(testset, received_unpack, messages);
+}
+
+template <template <typename> class Q>
+void test_dequeue_order(unsigned consumers_count, std::size_t messages) {
+  messages = remainderless(messages, consumers_count);
+  Vec2D<int> testset(1, std::vector<int>(messages));
+  std::vector<std::future<bool>> valid_orders(consumers_count);
+  Q<producer_value> q;
+  for (std::size_t i = 0; i < messages; ++i) {
+    q.enqueue(producer_value{0, int(i + 1)});
+    testset[0][i] = i + 1;
+  }
+  for (auto& f : valid_orders) {
+    f = std::async(std::launch::async, [&]{ return consume(q, messages / consumers_count, 1); });
+  }
+  std::for_each(valid_orders.begin(), valid_orders.end(), [](auto& f){ REQUIRE(f.get()); });
+  REQUIRE(q.empty());
 }
 
 } // namespace lockfree

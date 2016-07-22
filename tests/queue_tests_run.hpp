@@ -67,6 +67,31 @@ void run_test_queue_t3() {
 }
 
 template <template <typename> class Q>
+void run_test_dequeue_order() {
+  SECTION("300 messages") {
+    constexpr std::size_t messages = 300;
+    test_dequeue_order<Q>(1, messages);
+    test_dequeue_order<Q>(2, messages);
+    test_dequeue_order<Q>(4, messages);
+    test_dequeue_order<Q>(6, messages);
+  }
+  SECTION("1000 messages") {
+    constexpr std::size_t messages = 1'000;
+    test_dequeue_order<Q>(1, messages);
+    test_dequeue_order<Q>(2, messages);
+    test_dequeue_order<Q>(4, messages);
+    test_dequeue_order<Q>(6, messages);
+  }
+  SECTION("10 000 messages") {
+    constexpr std::size_t messages = 10'000;
+    test_dequeue_order<Q>(1, messages);
+    test_dequeue_order<Q>(2, messages);
+    test_dequeue_order<Q>(4, messages);
+    test_dequeue_order<Q>(6, messages);
+  }
+}
+
+template <template <typename> class Q>
 void run_test_manythreads() {
   std::size_t messages = 50;
   SECTION("50 messages") {

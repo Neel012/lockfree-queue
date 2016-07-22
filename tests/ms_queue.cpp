@@ -23,6 +23,10 @@ TEST_CASE("ms_queue - 3 threads") {
   run_test_queue_t3<Q>();
 }
 
+TEST_CASE("ms_queue - dequeue order") {
+  run_test_dequeue_order<Q>();
+}
+
 TEST_CASE("ms_queue - many threads") {
   run_test_manythreads<Q>();
 }
