@@ -32,6 +32,7 @@ add_executable(ms_queue
     tagged_pointer.hpp
     ms_queue.hpp
     tests/queue_tests.hpp
+    tests/queue_tests_run.hpp
     tests/ms_queue.cpp
 )
 
@@ -42,12 +43,14 @@ add_executable(epoch_queue
     epoch.hpp
     epoch_queue.hpp
     tests/queue_tests.hpp
+    tests/queue_tests_run.hpp
     tests/epoch_queue.cpp
 )
 
 add_executable(my_queue
     tests/main.cpp
     tests/queue_tests.hpp
+    tests/queue_tests_run.hpp
     tests/my_queue.cpp
 )
  

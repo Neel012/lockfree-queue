@@ -7,60 +7,43 @@
 
 namespace lockfree {
 
-struct test_counter {
-  test_counter(int& i) : n{i} { n++; }
-
-  ~test_counter() { n--; }
-
-  int& n;
-};
-
 template <template <typename> class Q>
-void test_queue_basic(Q<int>& q, size_t count) {
+void test_queue_basic(std::size_t count) {
+  Q<std::size_t> q;
   REQUIRE(q.empty());
-  for (size_t i{0}; i < count; i++) {
-    q.enqueue(i + 1);
+  for (std::size_t i = 0; i < count; ++i) {
+    q.enqueue(i);
   }
   REQUIRE(!q.empty());
-  for (size_t i{0}; i < count; i++) {
-    REQUIRE(*q.dequeue() == i + 1);
+  for (std::size_t i = 0; i < count; ++i) {
+    REQUIRE(*q.dequeue() == i);
   }
   REQUIRE(q.empty());
-}
-
-template <template <typename> class Q>
-void test_only_enqueue(Q<int>& q, size_t count) {
-  REQUIRE(q.empty());
-  for (size_t i{0}; i < count; i++) {
-    q.enqueue(i + 1);
-  }
-  REQUIRE(!q.empty());
 }
 
 template <typename Q>
-void maybe_recieve(Q& q, size_t count) {
-  int i = 1;
-  while (i <= count) {
+void maybe_recieve(Q& q, std::size_t count) {
+  for (std::size_t i = 1; i <= count;) {
     auto pop = q.dequeue();
     if (pop) {
       REQUIRE(*pop == i);
-      i++;
+      ++i;
     }
   }
 }
 
 template <typename Q>
-void maybe_recieve_anything(Q& q, size_t count) {
-  int i = 1;
-  while (i <= count) {
+void maybe_recieve_anything(Q& q, std::size_t count) {
+  for (std::size_t i = 1; i <= count;) {
     if (q.dequeue()) {
-      i++;
+      ++i;
     }
   }
 }
 
 template <template <typename> class Q>
-void test_queue_basic2(Q<int>& q, size_t count) {
+void test_queue_basic2(std::size_t count) {
+  Q<int> q;
   REQUIRE(q.empty());
   std::vector<std::thread> threads(count);
   for (auto& t : threads) {
@@ -76,9 +59,10 @@ void test_queue_basic2(Q<int>& q, size_t count) {
 }
 
 template <template <typename> class Q>
-void test_queue_t2(Q<int>& q, size_t n) {
+void test_queue_t2(std::size_t n) {
+  Q<std::size_t> q;
   auto t = std::thread([&] {
-    for (size_t i{0}; i < n; i++) {
+    for (std::size_t i = 0; i < n; ++i) {
       q.enqueue(i + 1);
     }
   });
@@ -88,14 +72,15 @@ void test_queue_t2(Q<int>& q, size_t n) {
 }
 
 template <template <typename> class Q>
-void test_queue_t3(Q<int>& q, size_t n) {
+void test_queue_t3(std::size_t n) {
+  Q<int> q;
   auto t1 = std::thread([&] { maybe_recieve_anything(q, n); });
   auto t2 = std::thread([&] {
-    for (std::size_t i{0}; i < n/2; i++) {
+    for (std::size_t i = 0; i < n/2; ++i) {
       q.enqueue(i + 1);
     }
   });
-  for (std::size_t i{0}; i < (n / 2) + (n % 2); i++) {
+  for (std::size_t i = 0; i < (n / 2) + (n % 2); ++i) {
     q.enqueue(i + 1);
   }
   t1.join();
@@ -211,8 +196,12 @@ constexpr std::size_t remainderless(std::size_t base, unsigned desired_denominat
 // Assert that no message was lost and no consumer has received message in a
 // wrong order.
 template <template <typename> class Q>
-void test_queue_manythreads(unsigned producers_count, unsigned consumers_count) {
-  const std::size_t messages = remainderless(10'000, lcm(producers_count, consumers_count));
+void test_queue_manythreads(
+    unsigned producers_count,
+    unsigned consumers_count,
+    std::size_t messages)
+{
+  messages = remainderless(messages, lcm(producers_count, consumers_count));
   std::vector<std::vector<int>> testset = gen_seqset(producers_count, messages / producers_count);
   std::vector<std::thread> producers{producers_count};
   std::vector<std::future<std::vector<producer_value>>> received(consumers_count);
