@@ -33,11 +33,11 @@ struct ms_queue {
   }
 
   void enqueue(value_type& value) noexcept {
-    enqueue_(new node(value));
+    enqueue_(new node{value});
   }
 
   void enqueue(value_type&& value) {
-    enqueue_(new node(std::move(value)));
+    enqueue_(new node{std::move(value)});
   }
 
   optional dequeue() noexcept {
@@ -47,8 +47,9 @@ struct ms_queue {
     pointer_type tail = tail_.load();
     while (true) {
       pointer_type next = head.ptr()->next.load();
-      if (head != head_) {
-        head = head_.load();
+      pointer_type head_consistent = head_.load();
+      if (head != head_consistent) {
+        head = head_consistent;
         tail = tail_.load();
       } else {
         if (head.ptr() == tail.ptr()) {
@@ -59,7 +60,7 @@ struct ms_queue {
           tail_.compare_exchange_weak(tail, pointer_type(next.ptr(), tail.count() + 1));
         } else {
           assert(next.ptr() != nullptr);
-          value = std::move(next.ptr()->data);
+          value = next.ptr()->data;
           if (head_.compare_exchange_weak(head, pointer_type(next.ptr(), head.count() + 1))) {
             break;
           }
@@ -90,8 +91,9 @@ private:
     pointer_type tail = tail_.load();
     while (true) {
       pointer_type next = tail.ptr()->next.load();
-      if (tail != tail_) {
-        tail = tail_.load();
+      pointer_type tail_consistent = tail_.load();
+      if (tail != tail_consistent) {
+        tail = tail_consistent;
       } else {
         if (next.ptr() == nullptr) {
           if (tail.ptr()->next.compare_exchange_weak(next, pointer_type(new_node, next.count() + 1))) {
